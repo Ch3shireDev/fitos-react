@@ -1,0 +1,1 @@
+export const Card91D0 = () => <h1>Karta 91D0</h1>

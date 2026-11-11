@@ -1,5 +1,6 @@
-
-import { Link, Route, Routes } from 'react-router'
+import {Link, Route, Routes} from 'react-router'
+import {Card91D0} from "./91D0/Card91D0.tsx";
+import {Card7120} from "./7120/Card7120.tsx";
 
 function Home() {
   return (
@@ -11,9 +12,6 @@ function Home() {
       </nav>
   )
 }
-
-const Card91D0 = () => <h1>Karta 91D0</h1>
-const Card7120 = () => <h1>Karta 7120</h1>
 
 export default function App() {
   return (
