@@ -279,26 +279,23 @@ export function ThreatsSection() {
   )
 }
 
-export function SavedResult({ values }: { values: CardValues }) {
+export function SavedResult({ values, fileName, onDownload }: { values: CardValues; fileName: string; onDownload: () => void }) {
   const m = useMethodology()
   const a = assessCard(m, values)
-  const json = JSON.stringify({ habitat: m.code, ...values, assessment: a }, null, 2)
-  const download = () => {
-    if (typeof URL.createObjectURL !== 'function') return
-    const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }))
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `karta-${m.code}-${String(values.site.siteName ?? 'stanowisko').replace(/\s+/g, '_')}.json`
-    link.click()
-    URL.revokeObjectURL(url)
-  }
+  // Podgląd bez base64 zdjęć – inaczej to ściana znaków.
+  const json = JSON.stringify(
+    { habitat: m.code, ...values, assessment: a },
+    (k, v) => (k === 'dataUrl' && typeof v === 'string' ? `[zdjęcie, ${Math.round((v.length * 3) / 4 / 1024)} kB]` : v),
+    2,
+  )
   return (
     <section className="hf-saved" role="status" aria-live="polite">
       <p>
-        Karta zapisana. Ocena ogólna: <GradeBadge grade={a.overall} />
+        Karta zapisana do pliku <strong>{fileName}</strong>. Ocena ogólna: <GradeBadge grade={a.overall} />
       </p>
-      <button type="button" className="hf-secondary" onClick={download}>
-        Pobierz JSON
+      <p className="hf-hint">W archiwum: karta.json (dane) i folder zdjecia/. Ten plik wczytasz z powrotem przyciskiem „Wczytaj z pliku”.</p>
+      <button type="button" className="hf-secondary" onClick={onDownload}>
+        Pobierz ponownie (.zip)
       </button>
       <details>
         <summary>Podgląd danych</summary>

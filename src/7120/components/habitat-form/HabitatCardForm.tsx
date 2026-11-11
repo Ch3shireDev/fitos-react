@@ -1,11 +1,13 @@
 // Generyczny formularz karty obserwacji. Wszystko, co specyficzne dla siedliska, przychodzi z `methodology`.
-import { useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { FormProvider, useForm, type FieldErrors, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { emptyCardValues } from '../../habitats/assessment'
 import { buildCardSchema } from '../../habitats/schema'
 import type { CardValues, Methodology } from '../../habitats/types'
+import { CardFileError, cardFileName, cardFromFile, cardToZip } from './cardArchive'
 import { MethodologyContext } from './context'
+import { deleteDraft, draftKey, loadDraft, saveDraft as storeDraft } from './draftStore'
 import { IMPACT_CODES_ID } from './fields'
 import { HelpContext } from './help'
 import { ImpactsSection, OtherSection, RelevesSection, SavedResult, SiteSection, ThreatsSection } from './steps'
@@ -113,7 +115,113 @@ export function HabitatCardForm({ methodology: m, examples = [], onSubmit }: Pro
   const [submitFailed, setSubmitFailed] = useState(false)
   const [saved, setSaved] = useState<CardValues | null>(null)
   const [showAllHelp, setShowAllHelp] = useState(false)
+  /** Zmienia się przy każdym reset() – przemontowuje pola z lokalnym stanem tekstu (np. pokrycie). */
+  const [resetKey, setResetKey] = useState(0)
   const [docxState, setDocxState] = useState<'idle' | 'busy' | 'error'>('idle')
+
+  const [fileMsg, setFileMsg] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null)
+  const fileInput = useRef<HTMLInputElement>(null)
+  const [draftAt, setDraftAt] = useState<string | null>(null)
+
+  // ---------- kopia robocza w pamięci urządzenia ----------
+  const storageKey = draftKey(m.code)
+  const hasData = useCallback(() => JSON.stringify(form.getValues()) !== JSON.stringify(defaults), [form, defaults])
+  /** Pytanie przed każdą operacją, która nadpisuje albo kasuje wpisane dane. Pusta karta – bez pytania. */
+  const confirmLoss = useCallback((question: string) => !hasData() || typeof window.confirm !== 'function' || window.confirm(question), [hasData])
+  const draftReady = useRef(false)
+
+  // przy starcie: przywróć to, co zostało w pamięci (np. po zamknięciu przeglądarki albo braku zasięgu)
+  useEffect(() => {
+    let cancelled = false
+    // prośba, by przeglądarka nie czyściła pamięci strony przy braku miejsca (zwłaszcza w zainstalowanej PWA)
+    void navigator.storage?.persist?.().catch(() => undefined)
+    void loadDraft(storageKey).then((draft) => {
+      if (cancelled) return
+      if (draft && JSON.stringify(draft.values) !== JSON.stringify(defaults)) {
+        form.reset(draft.values)
+        setResetKey((k) => k + 1)
+        setDraftAt(draft.savedAt)
+        setFileMsg({ kind: 'ok', text: `Przywrócono kartę z pamięci urządzenia (ostatnia zmiana: ${formatTime(draft.savedAt)}).` })
+      }
+      draftReady.current = true
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [storageKey, defaults, form])
+
+  // każda zmiana ląduje w pamięci po chwili bezczynności
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const sub = form.watch(() => {
+      if (!draftReady.current) return
+      clearTimeout(timer)
+      timer = setTimeout(() => {
+        const values = form.getValues()
+        const empty = JSON.stringify(values) === JSON.stringify(defaults)
+        void (empty ? deleteDraft(storageKey) : storeDraft(storageKey, values))
+          .then(() => setDraftAt(empty ? null : new Date().toISOString()))
+          .catch((e) => console.error('Nie udało się zapisać kopii roboczej', e))
+      }, 400)
+    })
+    return () => {
+      clearTimeout(timer)
+      sub.unsubscribe()
+    }
+  }, [form, defaults, storageKey])
+
+  // zamknięcie/odświeżenie strony z wpisanymi danymi – pytanie przeglądarki
+  useEffect(() => {
+    const onUnload = (e: BeforeUnloadEvent) => {
+      if (!hasData()) return
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', onUnload)
+    return () => window.removeEventListener('beforeunload', onUnload)
+  }, [hasData])
+
+  // przycisk/gest „wstecz” – pytanie, zanim formularz zniknie
+  useEffect(() => {
+    if (typeof history === 'undefined') return
+    history.pushState({ hfGuard: true }, '')
+    const onPop = () => {
+      if (confirmLoss(LEAVE_QUESTION)) {
+        window.removeEventListener('popstate', onPop)
+        history.back()
+      } else {
+        history.pushState({ hfGuard: true }, '')
+      }
+    }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [confirmLoss])
+
+  /** Zapis karty: .zip z karta.json i zdjęciami w zdjecia/. */
+  const downloadZip = (values: CardValues) => {
+    const bytes = cardToZip(m, values)
+    downloadBlob(new Blob([bytes as BlobPart], { type: 'application/zip' }), cardFileName(m, values))
+  }
+
+  const loadFile = async (file: File | undefined) => {
+    if (!file) return
+    try {
+      const loaded = cardFromFile(m, new Uint8Array(await file.arrayBuffer()), file.name)
+      form.reset(loaded.values)
+      setResetKey((k) => k + 1)
+      setSaved(null)
+      setSubmitFailed(false)
+      setTab(0)
+      const photos = loaded.photos ? `, zdjęć: ${loaded.photos}` : ''
+      const missing = loaded.missingPhotos.length ? ` Brakuje w archiwum ${loaded.missingPhotos.length} zdjęć: ${loaded.missingPhotos.join(', ')}.` : ''
+      setFileMsg({ kind: missing ? 'error' : 'ok', text: `Wczytano kartę z pliku ${file.name}${photos}.${missing}` })
+    } catch (e) {
+      if (!(e instanceof CardFileError)) console.error(e)
+      setFileMsg({ kind: 'error', text: e instanceof CardFileError ? e.message : `Nie udało się wczytać pliku ${file.name}.` })
+    } finally {
+      if (fileInput.current) fileInput.current.value = ''
+    }
+  }
 
   /** Word w układzie karty GIOŚ. Biblioteka docx jest ciężka, więc ładuje się dopiero po kliknięciu. */
   const downloadDocx = async () => {
@@ -122,16 +230,7 @@ export function HabitatCardForm({ methodology: m, examples = [], onSubmit }: Pro
       const { cardToDocxBlob, docxFileName } = await import('./exportDocx')
       const values = form.getValues()
       const blob = await cardToDocxBlob(m, values)
-      if (typeof URL.createObjectURL === 'function') {
-        const url = URL.createObjectURL(blob)
-        const link = document.createElement('a')
-        link.href = url
-        link.download = docxFileName(m, values)
-        document.body.appendChild(link)
-        link.click()
-        link.remove()
-        setTimeout(() => URL.revokeObjectURL(url), 1000)
-      }
+      downloadBlob(blob, docxFileName(m, values))
       setDocxState('idle')
     } catch (e) {
       console.error(e)
@@ -168,14 +267,26 @@ export function HabitatCardForm({ methodology: m, examples = [], onSubmit }: Pro
   }
 
   const loadExample = (values: CardValues) => {
+    if (!confirmLoss('Wczytanie przykładu zastąpi dane wpisane w formularzu. Kontynuować?')) return
     form.reset(structuredClone(values))
+    setResetKey((k) => k + 1)
+    setFileMsg(null)
     setSaved(null)
     setSubmitFailed(false)
     setTab(0)
   }
 
   const clear = () => {
+    if (
+      !confirmLoss(
+        'Na pewno wyczyścić kartę? Wszystkie wpisane dane i zdjęcia zostaną usunięte z tego urządzenia.\n\nJeśli chcesz je zachować, anuluj i najpierw użyj „Zapisz kartę (.zip)”.',
+      )
+    )
+      return
     form.reset(defaults)
+    setResetKey((k) => k + 1)
+    void deleteDraft(storageKey).then(() => setDraftAt(null))
+    setFileMsg(null)
     setSaved(null)
     setSubmitFailed(false)
     setTab(0)
@@ -185,6 +296,7 @@ export function HabitatCardForm({ methodology: m, examples = [], onSubmit }: Pro
     (values) => {
       setSubmitFailed(false)
       setSaved(values)
+      downloadZip(values)
       onSubmit?.(values)
     },
     (errs) => {
@@ -197,6 +309,13 @@ export function HabitatCardForm({ methodology: m, examples = [], onSubmit }: Pro
       }
     },
   )
+
+  /** Wersja robocza: zapis bez walidacji, żeby nie stracić niedokończonej karty. */
+  const saveDraft = () => {
+    const values = form.getValues()
+    downloadZip(values)
+    setSaved(values)
+  }
 
   const stepsWithErrors = tabs.filter((t) => t.hasError).map((t) => t.title)
   const renderStep = (s: FormStep) => (
@@ -217,6 +336,24 @@ export function HabitatCardForm({ methodology: m, examples = [], onSubmit }: Pro
             <h1>Karta {m.code}</h1>
             <p className="hf-subtitle">{m.name}</p>
             <div className="hf-toolbar">
+              <input
+                ref={fileInput}
+                id="hf-load-file"
+                type="file"
+                accept=".zip,.json,application/zip,application/json"
+                className="hf-visually-hidden"
+                onChange={(e) => void loadFile(e.target.files?.[0])}
+              />
+              <button
+                type="button"
+                className="hf-primary hf-load-btn"
+                onClick={() => {
+                  if (confirmLoss('Wczytanie karty z pliku zastąpi dane wpisane w formularzu. Kontynuować?')) fileInput.current?.click()
+                }}
+                title="Plik .zip zapisany przyciskiem „Zapisz kartę” (dane + zdjęcia) albo starszy .json"
+              >
+                Wczytaj z pliku
+              </button>
               {examples.map((e) => (
                 <button key={e.id} type="button" className="hf-secondary" onClick={() => loadExample(e.values)}>
                   Wczytaj przykład: {e.label}
@@ -230,6 +367,16 @@ export function HabitatCardForm({ methodology: m, examples = [], onSubmit }: Pro
                 Rozwiń wszystkie wyjaśnienia (tryb dla początkujących)
               </label>
             </div>
+            {fileMsg && (
+              <p className={fileMsg.kind === 'ok' ? 'hf-file-msg' : 'hf-file-msg hf-file-msg-error'} role={fileMsg.kind === 'ok' ? 'status' : 'alert'}>
+                {fileMsg.text}
+              </p>
+            )}
+            <p className="hf-hint hf-draft-status" aria-live="polite">
+              {draftAt
+                ? `Wpisane dane są zapisywane na bieżąco w pamięci tego urządzenia (ostatnio: ${formatTime(draftAt)}). Usuwa je dopiero „Wyczyść”.`
+                : 'Wpisane dane będą zapisywane na bieżąco w pamięci tego urządzenia – nic nie zginie po zamknięciu strony.'}
+            </p>
             <p className="hf-hint">
               Przy każdym polu jest przycisk „?”, który pokazuje, co wpisać i dlaczego.
             </p>
@@ -275,10 +422,13 @@ export function HabitatCardForm({ methodology: m, examples = [], onSubmit }: Pro
             <div id="hf-panel" role="tabpanel" aria-labelledby={tabDomId(tab)} className="hf-panel">
               {submitFailed && stepsWithErrors.length > 0 && (
                 <p className="hf-alert" role="alert">
-                  Karta nie zapisana. Błędy w: {stepsWithErrors.join(', ')}. Pola zaznaczone na czerwono.
+                  Karta nie zapisana. Błędy w: {stepsWithErrors.join(', ')}. Pola zaznaczone na czerwono.{' '}
+                  <button type="button" className="hf-secondary hf-draft-btn" onClick={saveDraft}>
+                    Zapisz mimo braków (wersja robocza)
+                  </button>
                 </p>
               )}
-              <div className="hf-card">
+              <div className="hf-card" key={resetKey}>
                 <p className="hf-bar hf-bar-title">Karta obserwacji siedliska przyrodniczego na stanowisku</p>
                 {tab === ALL ? steps.map(renderStep) : renderStep(steps[tab])}
               </div>
@@ -304,8 +454,8 @@ export function HabitatCardForm({ methodology: m, examples = [], onSubmit }: Pro
               >
                 {docxState === 'busy' ? 'Przygotowuję .docx…' : 'Pobierz kartę (.docx)'}
               </button>
-              <button type="submit" className="hf-primary">
-                Zapisz kartę
+              <button type="submit" className="hf-primary" title="Pobiera plik .zip: dane karty (karta.json) i zdjęcia (folder zdjecia/). Można go potem wczytać przyciskiem „Wczytaj z pliku”.">
+                Zapisz kartę (.zip)
               </button>
             </footer>
             {docxState === 'error' && (
@@ -315,10 +465,31 @@ export function HabitatCardForm({ methodology: m, examples = [], onSubmit }: Pro
             )}
           </form>
 
-          {saved && <SavedResult values={saved} />}
+          {saved && <SavedResult values={saved} fileName={cardFileName(m, saved)} onDownload={() => downloadZip(saved)} />}
         </div>
       </FormProvider>
       </HelpContext.Provider>
     </MethodologyContext.Provider>
   )
+}
+
+function downloadBlob(blob: Blob, name: string) {
+  if (typeof URL.createObjectURL !== 'function') return
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = name
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
+const LEAVE_QUESTION =
+  'Na pewno chcesz się wycofać z formularza? Wpisane dane zostają w pamięci tego urządzenia i wrócą przy następnym otwarciu karty.'
+
+function formatTime(iso: string): string {
+  const d = new Date(iso)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }

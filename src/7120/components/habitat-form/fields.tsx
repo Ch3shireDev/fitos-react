@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type ReactNode } from 'react'
+import { Fragment, useState, type CSSProperties, type ReactNode } from 'react'
 import {
   get,
   useController,
@@ -26,7 +26,7 @@ import {
   type SpeciesRow,
 } from '../../habitats/types'
 import { useMethodology } from './context'
-import { GENERIC_HELP, LabelWithHelp, useHelpToggle } from './help'
+import { GENERIC_HELP, useHelpToggle } from './help'
 import { AutoTextarea, DateInput } from './inputs'
 import { PhotosField } from './photos'
 import { SpeciesCombobox } from './SpeciesCombobox'
@@ -77,21 +77,16 @@ export function GradeBadge({ grade }: { grade: GradeOrEmpty }) {
 export function InputBox({
   unit,
   invalid,
-  onFocusChange,
   children,
 }: {
   unit?: string
   invalid?: boolean
-  /** Fokus na kontrolce w środku (nie na przycisku „?”) – do pokazywania placeholdera dopiero po podniesieniu etykiety. */
-  onFocusChange?: (focused: boolean) => void
   children: ReactNode
 }) {
   return (
     <div
       className="hf-box"
       data-invalid={invalid ? 'true' : undefined}
-      onFocus={onFocusChange && (() => onFocusChange(true))}
-      onBlur={onFocusChange && (() => onFocusChange(false))}
     >
       {children}
       {unit && (
@@ -105,8 +100,8 @@ export function InputBox({
 
 /**
  * Układ pola:
- * - `row` – jak w karcie: etykieta w lewej, szarej kolumnie, pole w prawej (na wąskim ekranie zamienia się w floating label),
- * - `float` – floating label w środku pola (do grup pól i paneli pomiarów).
+ * - `row` – jak w karcie: etykieta w lewej, szarej kolumnie, pole w prawej (na wąskim ekranie etykieta idzie nad pole),
+ * - `float` – etykieta z „?” nad polem (grupy pól i panele pomiarów). Nazwa klasy została z czasów floating label.
  */
 export type FieldLayout = 'row' | 'float'
 
@@ -186,7 +181,6 @@ export function FieldInput({ field, path, layout = 'row' }: { field: FieldDef; p
   const { register, control } = useFormContext<CardValues>()
   const value = useWatch({ control, name: p(path) })
   const error = useFieldError(path)
-  const [focused, setFocused] = useState(false)
   const id = toId(path)
 
   if (field.kind === 'species' || field.kind === 'releve-species' || field.kind === 'photos') {
@@ -212,9 +206,7 @@ export function FieldInput({ field, path, layout = 'row' }: { field: FieldDef; p
     className: 'hf-control',
     'aria-invalid': error ? true : undefined,
     'aria-describedby': describedBy,
-    // W floating label placeholder pojawia się dopiero, gdy etykieta już siedzi na górze –
-    // inaczej oba teksty lądują w tym samym miejscu. Nie polegamy tu wyłącznie na CSS.
-    placeholder: layout === 'row' || focused ? field.placeholder : undefined,
+    placeholder: field.placeholder,
   }
   const unit = field.kind === 'number' || field.kind === 'text' ? field.unit : undefined
 
@@ -246,7 +238,7 @@ export function FieldInput({ field, path, layout = 'row' }: { field: FieldDef; p
           className="hf-control"
           invalid={Boolean(error)}
           describedBy={describedBy}
-          placeholder={layout === 'row' || focused ? (field.placeholder ?? 'DD.MM.RRRR') : undefined}
+          placeholder={field.placeholder ?? 'DD.MM.RRRR'}
         />
       )
       break
@@ -265,7 +257,7 @@ export function FieldInput({ field, path, layout = 'row' }: { field: FieldDef; p
       filled={isFilled(field, value)}
       wide={field.kind === 'textarea' || field.wide}
     >
-      <InputBox unit={unit} invalid={Boolean(error)} onFocusChange={setFocused}>
+      <InputBox unit={unit} invalid={Boolean(error)}>
         {input}
       </InputBox>
       {field.hint && (
@@ -355,7 +347,6 @@ function SpeciesAdder({
   onAdd: (name: string, option?: CatalogOption) => void
 }) {
   const [query, setQuery] = useState('')
-  const [focused, setFocused] = useState(false)
   const { button, panel } = useHelpToggle(GENERIC_HELP.speciesName, 'Dodaj gatunek')
   return (
     <div className={cls('hf-f', 'hf-f-float', 'hf-has-help', query !== '' && 'hf-filled', 'hf-adder')}>
@@ -366,7 +357,7 @@ function SpeciesAdder({
         {button}
       </div>
       <div className="hf-f-body">
-        <InputBox onFocusChange={setFocused}>
+        <InputBox>
           <SpeciesCombobox
             id={id}
             value={query}
@@ -376,7 +367,7 @@ function SpeciesAdder({
               setQuery('')
             }}
             catalog={catalog}
-            placeholder={focused ? 'nazwa naukowa lub polska…' : undefined}
+            placeholder="nazwa naukowa lub polska…"
           />
         </InputBox>
         {panel}
@@ -519,10 +510,13 @@ function SpeciesList({ path, labelId }: { path: string; labelId: string }) {
   return (
     <div className="hf-list" role="group" aria-labelledby={labelId}>
       {fields.length > 0 && (
-        <div className="hf-species-row hf-species-head">
-          <LabelWithHelp label="Gatunek" help={GENERIC_HELP.speciesName} />
-          <LabelWithHelp label="Pokrycie" help={GENERIC_HELP.speciesCover} />
-        </div>
+        <ColumnHeads
+          rowClass="hf-species-row"
+          cols={[
+            { label: 'Gatunek', help: GENERIC_HELP.speciesName },
+            { label: 'Pokrycie', help: GENERIC_HELP.speciesCover },
+          ]}
+        />
       )}
       <ul className="hf-species">
         {fields.map((row, idx) => (
@@ -536,20 +530,41 @@ function SpeciesList({ path, labelId }: { path: string; labelId: string }) {
 }
 
 /**
+ * Nagłówki kolumn listy z „?”. Wyjaśnienia (w trybie „rozwiń wszystkie”) idą POD całym wierszem nagłówków,
+ * na pełnej szerokości – w wąskiej kolumnie siatki tekst łamał się po jednym słowie. Zwykły dymek i tak jest portalem.
+ */
+function ColumnHeads({ rowClass, cols }: { rowClass: string; cols: { label: string; help: string }[] }) {
+  // stała liczba wywołań hooków (maks. 3 kolumny)
+  const h0 = useHelpToggle(cols[0]?.help, cols[0]?.label ?? '')
+  const h1 = useHelpToggle(cols[1]?.help, cols[1]?.label ?? '')
+  const h2 = useHelpToggle(cols[2]?.help, cols[2]?.label ?? '')
+  const helps = [h0, h1, h2].slice(0, cols.length)
+  return (
+    <>
+      <div className={`${rowClass} hf-species-head`}>
+        {cols.map((c, i) => (
+          <span key={c.label} className="hf-label-row">
+            <span className="hf-label">{c.label}</span>
+            {helps[i].button}
+          </span>
+        ))}
+      </div>
+      {helps.some((h) => h.panel) && <div className="hf-col-help">{helps.map((h, i) => <Fragment key={i}>{h.panel}</Fragment>)}</div>}
+    </>
+  )
+}
+
+/**
  * Pole pokrycia: przyjmuje „40”, „0,5”, „<1”. W danych liczba (<1 -> 0,5), na ekranie to, co wpisano,
  * a po wczytaniu karty 0,5 pokazuje się z powrotem jako „<1”.
  */
 function CoverInput({ path, id, invalid }: { path: string; id: string; invalid?: boolean }) {
   const { control } = useFormContext<CardValues>()
   const { field } = useController({ control, name: p(path) })
+  // Tekst żyje lokalnie i NIE jest synchronizowany z field.value przy renderze: po skasowaniu pola
+  // RHF oddaje wartość domyślną zamiast undefined, więc synchronizacja wpisywała starą liczbę z powrotem.
+  // Reset/wczytanie karty przemontowuje formularz (klucz w HabitatCardForm), więc tekst bierze się na nowo.
   const [text, setText] = useState(() => coverToInput(field.value))
-  // wartość zmieniona z zewnątrz (wczytanie przykładu, reset) – odśwież tekst
-  const parsed = parseCover(text)
-  const external = field.value as number | undefined
-  if (!(parsed === external || (Number.isNaN(parsed) && Number.isNaN(external)))) {
-    const next = coverToInput(external)
-    if (next !== text) setText(next)
-  }
   return (
     <input
       id={id}
@@ -608,11 +623,14 @@ function ReleveSpeciesList({ path, labelId }: { path: string; labelId: string })
   return (
     <div className="hf-list" role="group" aria-labelledby={labelId}>
       {fields.length > 0 && (
-        <div className="hf-releve-row hf-species-head">
-          <LabelWithHelp label="Warstwa" help={GENERIC_HELP.releveLayer} />
-          <LabelWithHelp label="Gatunek" help={GENERIC_HELP.speciesName} />
-          <LabelWithHelp label="Ilościowość (B-B)" help={GENERIC_HELP.releveAbundance} />
-        </div>
+        <ColumnHeads
+          rowClass="hf-releve-row"
+          cols={[
+            { label: 'Warstwa', help: GENERIC_HELP.releveLayer },
+            { label: 'Gatunek', help: GENERIC_HELP.speciesName },
+            { label: 'Ilościowość (B-B)', help: GENERIC_HELP.releveAbundance },
+          ]}
+        />
       )}
       <ul className="hf-species">
         {fields.map((row, idx) => (

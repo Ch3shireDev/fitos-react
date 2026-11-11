@@ -59,7 +59,7 @@ describe('Card7120 – układ jak w karcie obserwacji', () => {
     const user = setup()
     await user.click(tab('Stan ochrony'))
     const headers = screen.getAllByRole('columnheader').map((h) => h.textContent)
-    expect(headers).toEqual(['Parametr', 'Wskaźniki', 'Wartość lub opis?', 'Ocena', 'wskaźnika?', 'parametru'])
+    expect(headers).toEqual(['Wskaźniki', 'Wartość lub opis?', 'Ocena wskaźnika i parametru?'])
   })
 
   it('jednostka siedzi w polu, a czytnik ekranu dostaje ją w etykiecie', () => {
@@ -83,7 +83,7 @@ describe('Card7120 – nawigacja i zapis', () => {
   it('pusta karta przy zapisie: komunikat, skok do pierwszej zakładki z błędem i znaczniki', async () => {
     const user = setup()
     await user.click(tab('Oddziaływania'))
-    await user.click(screen.getByRole('button', { name: 'Zapisz kartę' }))
+    await user.click(screen.getByRole('button', { name: 'Zapisz kartę (.zip)' }))
     expect(await screen.findByText(/Karta nie zapisana\. Błędy w: Stanowisko, Stan ochrony/)).toBeInTheDocument()
     expect(sectionTitles()).toEqual(['Stanowisko – informacje podstawowe'])
     expect(screen.getByLabelText(/Nazwa stanowiska/, FIELD)).toHaveAttribute('aria-invalid', 'true')
@@ -109,7 +109,7 @@ describe('Card7120 – nawigacja i zapis', () => {
     expect(date).toHaveValue('14.07.2025')
     await user.clear(date)
     await user.type(date, '31.02.2025')
-    await user.click(screen.getByRole('button', { name: 'Zapisz kartę' }))
+    await user.click(screen.getByRole('button', { name: 'Zapisz kartę (.zip)' }))
     expect(await screen.findByText('Podaj datę w formacie DD.MM.RRRR, np. 14.07.2025')).toBeInTheDocument()
   })
 
@@ -124,7 +124,7 @@ describe('Card7120 – nawigacja i zapis', () => {
     expect(within(screen.getByTestId('grade-param-structure')).getByText('U2')).toBeInTheDocument()
     expect(within(screen.getByTestId('grade-overall')).getByText('U2')).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Zapisz kartę' }))
+    await user.click(screen.getByRole('button', { name: 'Zapisz kartę (.zip)' }))
     expect(await screen.findByText(/Karta zapisana/)).toBeInTheDocument()
   })
 })
@@ -258,16 +258,44 @@ describe('Card7120 – wyjaśnienia', () => {
   })
 })
 
-describe('Card7120 – floating label i panele', () => {
-  it('placeholder pola z pływającą etykietą pojawia się dopiero po wejściu w pole', async () => {
+describe('Card7120 – etykiety nad polami i panele', () => {
+  it('etykieta i „?” stoją nad polem, poza jego ramką; placeholder widać od razu', async () => {
     const user = setup()
     await user.click(tab('Zdjęcia fitosocjologiczne'))
     const exposure = document.querySelector<HTMLInputElement>('input[id$="releves-0-exposure"]')!
-    expect(exposure).not.toHaveAttribute('placeholder')
-    await user.click(exposure)
     expect(exposure.getAttribute('placeholder')).toMatch(/np\. S/)
+    const field = exposure.closest('.hf-f')!
+    const head = field.querySelector('.hf-f-head')!
+    const box = exposure.closest('.hf-box')!
+    expect(head).toContainElement(screen.getAllByRole('button', { name: 'Wyjaśnienie: Ekspozycja' })[0])
+    expect(box.querySelector('.hf-help-btn')).toBeNull()
+    expect(head.compareDocumentPosition(box) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('w trybie „rozwiń wszystkie” wyjaśnienia kolumn listy gatunków są pod nagłówkami, nie w kolumnie', async () => {
+    const user = setup()
+    await loadExample(user)
+    await user.click(tab('Stan ochrony'))
+    await user.click(screen.getByLabelText(/Rozwiń wszystkie wyjaśnienia/))
+    const head = document.querySelector('.hf-species-head')!
+    expect(head.querySelector('.hf-help')).toBeNull()
+    expect(head.nextElementSibling).toHaveClass('hf-col-help')
+    expect(head.nextElementSibling).toHaveTextContent(/Wpisz kilka liter nazwy/)
+  })
+
+  it('pokrycie gatunku da się skasować do zera i wpisać nowe', async () => {
+    const user = setup()
+    await loadExample(user)
+    await user.click(tab('Stan ochrony'))
+    const cover = screen.getAllByLabelText(/^Pokrycie 1 \(%\)/)[0] as HTMLInputElement
+    expect(cover.value).not.toBe('')
+    await user.clear(cover)
+    expect(cover).toHaveValue('')
+    await user.type(cover, '12')
+    expect(cover).toHaveValue('12')
+    await user.clear(cover)
     await user.tab()
-    expect(exposure).not.toHaveAttribute('placeholder')
+    expect(cover).toHaveValue('')
   })
 
   it('„?” otwiera dymek poza polem; Escape zamyka i wraca na przycisk', async () => {
@@ -366,5 +394,37 @@ describe('Card7120 – eksport do Worda', () => {
       URL.createObjectURL = origCreate
       URL.revokeObjectURL = origRevoke
     }
+  })
+})
+
+describe('Card7120 – zapis i wczytanie z pliku', () => {
+  it('„Wczytaj z pliku” jest pierwszym przyciskiem i wczytuje .zip zapisany przez formularz', async () => {
+    const { cardToZip } = await import('./components/habitat-form/cardArchive')
+    const { methodology7120 } = await import('./habitats/7120/methodology')
+    const { examples7120 } = await import('./habitats/7120/examples')
+    const user = setup()
+    const first = screen.getAllByRole('button')[0]
+    expect(first).toHaveTextContent('Wczytaj z pliku')
+
+    const bytes = cardToZip(methodology7120, examples7120[0].values)
+    const file = new File([bytes as BlobPart], 'Karta_7120_Reptowo_2_14.07.2025.zip', { type: 'application/zip' })
+    const input = document.getElementById('hf-load-file') as HTMLInputElement
+    await user.upload(input, file)
+    expect(await screen.findByText(/Wczytano kartę z pliku Karta_7120_Reptowo_2_14\.07\.2025\.zip/)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Nazwa stanowiska/, FIELD)).toHaveValue('Reptowo 2')
+  })
+
+  it('zły plik: komunikat zamiast cichej porażki', async () => {
+    const user = setup()
+    const input = document.getElementById('hf-load-file') as HTMLInputElement
+    await user.upload(input, new File(['{"a":1}'], 'zly.json', { type: 'application/json' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent(/To nie jest karta 7120/)
+  })
+
+  it('pustą kartę da się zapisać jako wersję roboczą', async () => {
+    const user = setup()
+    await user.click(screen.getByRole('button', { name: 'Zapisz kartę (.zip)' }))
+    await user.click(await screen.findByRole('button', { name: /Zapisz mimo braków/ }))
+    expect(await screen.findByText(/Karta zapisana do pliku/)).toBeInTheDocument()
   })
 })

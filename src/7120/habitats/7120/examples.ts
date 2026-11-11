@@ -119,14 +119,22 @@ export const reptowo2: CardValues = {
       grade: 'U2',
     },
     invasive: { inputs: { cover: 0 }, value: 'Brak', grade: 'FV' },
-    expansive: { inputs: { cover: 55 }, value: 'Molinia caerulea 55%', grade: 'U1' },
+    expansive: { inputs: { species: [{ name: 'Molinia caerulea', cover: 55 }] }, value: 'Molinia caerulea 55%', grade: 'U1' },
     woody: {
-      inputs: { cover: 1 },
+      inputs: {
+        cover: 1,
+        species: [
+          { name: 'Betula pendula', cover: 1 },
+          { name: 'Betula pubescens', cover: 0.5 },
+          { name: 'Pinus sylvestris', cover: 0.5 },
+          { name: 'Frangula alnus', cover: 0.5 },
+        ],
+      },
       value:
         'Ogólne pokrycie drzew i krzewów 1% – Betula pendula 1%, Betula pubescens <1%, Pinus sylvestris <1%, Frangula alnus <1%',
       grade: 'FV',
     },
-    wellDeveloped: { inputs: { share: 0 }, value: '0%', grade: 'U2' },
+    wellDeveloped: { inputs: { share: 0, species: [] }, value: '0%', grade: 'U2' },
     hydration: {
       inputs: {},
       value: 'Więcej niż 40 cm poniżej powierzchni gruntu. Bardzo przesuszone',
@@ -194,14 +202,22 @@ export const reptowoIV: CardValues = {
       grade: 'U2',
     },
     invasive: { inputs: { cover: 0 }, value: 'Brak', grade: 'FV' },
-    expansive: { inputs: { cover: 70 }, value: 'Molinia caerulea 70%', grade: 'U1' },
+    expansive: { inputs: { species: [{ name: 'Molinia caerulea', cover: 70 }] }, value: 'Molinia caerulea 70%', grade: 'U1' },
     woody: {
-      inputs: { cover: 25 },
+      inputs: {
+        cover: 25,
+        species: [
+          { name: 'Betula pendula', cover: 15 },
+          { name: 'Betula pubescens', cover: 10 },
+          { name: 'Pinus sylvestris', cover: 0.5 },
+          { name: 'Frangula alnus', cover: 0.5 },
+        ],
+      },
       value:
         'Ogólne pokrycie drzew i krzewów 25% – Betula pendula 15%, Betula pubescens 10%, Pinus sylvestris <1%, Frangula alnus <1%',
       grade: 'U1',
     },
-    wellDeveloped: { inputs: { share: 0 }, value: '0%', grade: 'U2' },
+    wellDeveloped: { inputs: { share: 0, species: [] }, value: '0%', grade: 'U2' },
     hydration: {
       inputs: {},
       value: 'Około 20 - 40 cm poniżej powierzchni gruntu. Bardzo przesuszone',

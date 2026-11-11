@@ -1,6 +1,6 @@
 // „Stan ochrony siedliska przyrodniczego na stanowisku” – tabela 1:1 z kartą obserwacji:
-// Parametr | Wskaźniki | Wartość lub opis | Ocena wskaźnika | Ocena parametru.
-import { useState } from 'react'
+// Wiersz-nagłówek „Parametr: …”, pod nim: Wskaźnik | Wartość lub opis | Ocena (wskaźnika i parametru obok siebie).
+import { useState, type ReactNode } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
 import { assessCard } from '../../habitats/assessment'
 import type { CardValues, IndicatorDef, InputValues } from '../../habitats/types'
@@ -53,16 +53,14 @@ function HeadWithHelp({
   label,
   help,
   className,
-  rowSpan,
 }: {
   label: string
   help?: string
   className?: string
-  rowSpan?: number
 }) {
   const { button, panel } = useHelpToggle(help, label)
   return (
-    <th scope="col" className={className} rowSpan={rowSpan}>
+    <th scope="col" className={className}>
       <span className="hf-label-row">
         {label}
         {button}
@@ -74,13 +72,11 @@ function HeadWithHelp({
 
 function IndicatorRow({
   indicator: ind,
-  param,
   paramGrade,
   isFirst,
   span,
 }: {
   indicator: IndicatorDef
-  param: string
   paramGrade: CardValues['prospects']['grade']
   isFirst: boolean
   span: number
@@ -117,14 +113,6 @@ function IndicatorRow({
 
   return (
     <tr className={ind.cardinal ? 'hf-cardinal-row' : undefined}>
-      {isFirst && (
-        <th scope="rowgroup" rowSpan={span} className="hf-param">
-          {param}
-          <span className="hf-param-mobile">
-            Ocena parametru: <GradeBadge grade={paramGrade} />
-          </span>
-        </th>
-      )}
       <th scope="row" className="hf-ind" data-label="Wskaźnik">
         <span className="hf-label-row">
           <span className={ind.cardinal ? 'hf-ind-name hf-ind-cardinal' : 'hf-ind-name'}>{ind.label}</span>
@@ -169,14 +157,46 @@ function IndicatorRow({
           </p>
         )}
       </td>
-      <td className="hf-grade-cell" data-label="Ocena wskaźnika">
-        <GradeSelect path={`${base}.grade`} label={`Ocena wskaźnika: ${ind.label}`} suggestion={suggestion} />
+      <td className="hf-grade-cell" data-label="Ocena">
+        {/* Jedna kolumna: ocena wskaźnika i ocena parametru obok siebie – dwie wąskie kolumny były nieczytelne. */}
+        <div className="hf-grades">
+          <div className="hf-grades-ind">
+            <span className="hf-grades-cap" aria-hidden="true">
+              wskaźnika
+            </span>
+            <GradeSelect path={`${base}.grade`} label={`Ocena wskaźnika: ${ind.label}`} suggestion={suggestion} />
+          </div>
+          <div className="hf-grades-param" data-testid={isFirst ? `grade-param-${ind.parameter}` : undefined}>
+            <span className="hf-grades-cap">parametru</span>
+            <GradeBadge grade={paramGrade} />
+            <span className="hf-grades-note">
+              {span > 1 ? 'wynika z ocen wszystkich wskaźników parametru' : 'wynika z oceny wskaźnika'}
+            </span>
+          </div>
+        </div>
       </td>
-      {isFirst && (
-        <td rowSpan={span} className="hf-param-grade" data-testid={`grade-param-${ind.parameter}`}>
-          <GradeBadge grade={paramGrade} />
-        </td>
-      )}
+    </tr>
+  )
+}
+
+/** Wiersz-nagłówek grupy („Parametr: …”) na całą szerokość tabeli – zamiast bocznej kolumny „Parametr”. */
+function GroupHead({ title, grade, help, panel }: { title: string; grade?: CardValues['prospects']['grade']; help?: ReactNode; panel?: ReactNode }) {
+  return (
+    <tr className="hf-group-row">
+      <th scope="rowgroup" colSpan={3} className="hf-group-head">
+        <span className="hf-group-title">
+          <span className="hf-label-row">
+            {title}
+            {help}
+          </span>
+          {grade !== undefined && (
+            <span className="hf-group-grade">
+              ocena parametru: <GradeBadge grade={grade} />
+            </span>
+          )}
+        </span>
+        {panel}
+      </th>
     </tr>
   )
 }
@@ -200,43 +220,29 @@ export function StatusTable() {
       <div className="hf-table-wrap">
         <table className="hf-status">
           <colgroup>
-            <col className="hf-col-param" />
             <col className="hf-col-ind" />
             <col />
-            <col className="hf-col-grade-ind" />
-            <col className="hf-col-grade" />
+            <col className="hf-col-grades" />
           </colgroup>
           <thead>
             <tr>
-              <th scope="col" rowSpan={2}>
-                Parametr
-              </th>
-              <th scope="col" rowSpan={2}>
-                Wskaźniki
-              </th>
-              <HeadWithHelp label="Wartość lub opis" help={GENERIC_HELP.value} rowSpan={2} />
-              <th scope="colgroup" colSpan={2}>
-                Ocena
-              </th>
-            </tr>
-            <tr>
-              <HeadWithHelp label="wskaźnika" help={GENERIC_HELP.grade} className="hf-th-small" />
-              <th scope="col" className="hf-th-small">
-                parametru
-              </th>
+              <th scope="col">Wskaźniki</th>
+              <HeadWithHelp label="Wartość lub opis" help={GENERIC_HELP.value} />
+              <HeadWithHelp label="Ocena wskaźnika i parametru" help={GENERIC_HELP.grade} />
             </tr>
           </thead>
           <tbody className="hf-tbody-param">
+            <GroupHead title="Parametr: Powierzchnia" grade={a.area} />
             {area.map((i, idx) => (
-              <IndicatorRow key={i.id} indicator={i} param="Powierzchnia" paramGrade={a.area} isFirst={idx === 0} span={area.length} />
+              <IndicatorRow key={i.id} indicator={i} paramGrade={a.area} isFirst={idx === 0} span={area.length} />
             ))}
           </tbody>
           <tbody className="hf-tbody-param">
+            <GroupHead title="Parametr: Specyficzna struktura i funkcja" grade={a.structure} />
             {structure.map((i, idx) => (
               <IndicatorRow
                 key={i.id}
                 indicator={i}
-                param="Specyficzna struktura i funkcja"
                 paramGrade={a.structure}
                 isFirst={idx === 0}
                 span={structure.length}
@@ -244,14 +250,8 @@ export function StatusTable() {
             ))}
           </tbody>
           <tbody className="hf-tbody-param">
+            <GroupHead title="Parametr: Perspektywy ochrony" help={prospectsHelp} panel={prospectsPanel} />
             <tr>
-              <th scope="row" className="hf-param">
-                <span className="hf-label-row">
-                  Perspektywy ochrony
-                  {prospectsHelp}
-                </span>
-                {prospectsPanel}
-              </th>
               <td colSpan={2} className="hf-val" data-label="Opis">
                 <TextCell path="prospects.value" label="Perspektywy ochrony – opis" />
                 <button
@@ -268,23 +268,19 @@ export function StatusTable() {
                   </div>
                 )}
               </td>
-              <td colSpan={2} className="hf-grade-cell" data-label="Ocena">
+              <td className="hf-grade-cell" data-label="Ocena">
                 <GradeSelect path="prospects.grade" label="Ocena perspektyw ochrony" />
               </td>
             </tr>
+          </tbody>
+          <tbody className="hf-tbody-param">
+            <GroupHead title="Ocena ogólna" help={overallHelp} panel={overallPanel} />
             <tr className="hf-overall-row">
-              <th scope="row" className="hf-param">
-                <span className="hf-label-row">
-                  Ocena ogólna
-                  {overallHelp}
-                </span>
-                {overallPanel}
-              </th>
               <td colSpan={2} className="hf-val" data-label="Uzasadnienie">
                 <TextCell path="overallComment" label="Ocena ogólna – uzasadnienie" />
                 <p className="hf-hint">Ocena liczy się sama: najgorsza z ocen parametrów (powierzchnia, struktura i funkcja, perspektywy).</p>
               </td>
-              <td colSpan={2} className="hf-grade-cell" data-label="Ocena ogólna" data-testid="grade-overall">
+              <td className="hf-grade-cell" data-label="Ocena ogólna" data-testid="grade-overall">
                 <GradeBadge grade={a.overall} />
               </td>
             </tr>

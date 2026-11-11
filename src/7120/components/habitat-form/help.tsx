@@ -28,7 +28,7 @@ const GAP = 6
 const MARGIN = 8
 
 /**
- * Dymek z wyjaśnieniem, zakotwiczony pod przyciskiem „?” (albo nad nim, gdy brak miejsca).
+ * Dymek z wyjaśnieniem, zakotwiczony nad przyciskiem „?” (albo pod nim, gdy nad nim brak miejsca).
  * Renderowany poza tabelą/kolumną (portal do korzenia formularza, `position: fixed`), więc szerokość kolumny go nie ściska.
  * Zamyka się Escape'em, kliknięciem obok albo przyciskiem ✕.
  */
@@ -59,7 +59,8 @@ function HelpPopover({
       const h = el.scrollHeight
       const below = vh - a.bottom - GAP - MARGIN
       const above = a.top - GAP - MARGIN
-      const putAbove = h > below && above > below
+      // domyślnie NAD przyciskiem – żeby nie zasłaniać pola, którego dotyczy; pod spodem tylko gdy nad nim brak miejsca
+      const putAbove = h <= above || above >= below
       const maxHeight = Math.max(120, putAbove ? above : below)
       const top = putAbove ? Math.max(MARGIN, a.top - GAP - Math.min(h, maxHeight)) : a.bottom + GAP
       // prawa krawędź dymka przy prawej krawędzi przycisku, ale zawsze w oknie

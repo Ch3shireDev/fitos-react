@@ -167,54 +167,27 @@ textarea.hf-control { resize: vertical; }
 .hf-subfields-cols { grid-template-columns: repeat(var(--hf-cols), minmax(0, 1fr)); }
 @media (max-width: 48rem) { .hf-subfields-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
-/* ---------- floating label ---------- */
-.hf-f-float { position: relative; min-width: 0; }
-.hf-f-float > .hf-f-head { position: absolute; inset: 0 0 auto 0; height: 0; z-index: 1; }
-.hf-f-float > .hf-f-head .hf-f-label {
-  position: absolute; left: 0.6rem; top: 0.85rem; max-width: calc(100% - 3rem);
-  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
-  color: var(--hf-muted); pointer-events: none; transition: top 0.12s, font-size 0.12s, color 0.12s;
-}
-.hf-f-float:focus-within > .hf-f-head .hf-f-label,
-.hf-f-float.hf-filled > .hf-f-head .hf-f-label { top: 0.3rem; font-size: 0.72rem; }
-.hf-f-float:focus-within > .hf-f-head .hf-f-label { color: var(--hf-accent); }
-.hf-f-float > .hf-f-head .hf-help-btn { position: absolute; right: 0.35rem; top: 0.5rem; }
-.hf-f-float > .hf-f-body > .hf-box { padding-top: 1.05rem; }
-.hf-f-float.hf-has-help > .hf-f-body > .hf-box { padding-right: 2rem; }
-.hf-f-float .hf-control { padding-top: 0.2rem; }
-.hf-f-float .hf-control::placeholder { opacity: 0; }
-.hf-f-float .hf-control:focus::placeholder { opacity: 0.6; transition: opacity 0.1s 0.12s; }
-/* listy i grupy – etykieta nad treścią, nie pływa */
-.hf-f-float.hf-f-static > .hf-f-head { position: static; height: auto; display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.3rem; }
-.hf-f-float.hf-f-static > .hf-f-head .hf-f-label { position: static; max-width: none; white-space: normal; color: var(--hf-text); font-weight: 600; }
-.hf-f-float.hf-f-static > .hf-f-head .hf-help-btn { position: static; }
+/* ---------- etykieta nad polem ----------
+   W grupach pól, panelach pomiarów i na wąskim ekranie etykieta stoi nad polem, a „?” obok niej – poza ramką pola.
+   (Wcześniej był floating label w środku pola; zrezygnowany na rzecz spójności z listami gatunków.) */
+.hf-f-float { min-width: 0; }
+.hf-f-float > .hf-f-head { display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem; min-height: 1.75rem; }
+.hf-f-float > .hf-f-head .hf-f-label { font-size: 0.9rem; color: var(--hf-muted); }
+.hf-f-float:focus-within:not(.hf-f-static) > .hf-f-head .hf-f-label { color: var(--hf-accent); }
+.hf-f-float.hf-f-static > .hf-f-head .hf-f-label { color: var(--hf-text); font-weight: 600; font-size: inherit; }
 .hf-f-wide { grid-column: 1 / -1; }
 /* pole z otwartym wyjaśnieniem zajmuje cały wiersz grupy – w wąskiej kolumnie tekstu nie da się czytać */
 .hf-subfields > .hf-help-open { grid-column: 1 / -1; }
 
-/* Na wąskim ekranie wiersz karty zamienia się w floating label */
+/* Na wąskim ekranie wiersz karty: etykieta z „?” nad polem, pole na całą szerokość */
 @media (max-width: 48rem) {
-  .hf-f-row:not(.hf-f-static) { position: relative; display: block; padding: 0.4rem 0.6rem; }
-  .hf-f-row:not(.hf-f-static) > .hf-f-head {
-    position: absolute; inset: 0.4rem 0.6rem auto 0.6rem; height: 0; padding: 0; background: none; border: none; z-index: 1;
+  .hf-f-row { display: block; padding: 0.55rem 0.6rem; }
+  .hf-f-row > .hf-f-head {
+    padding: 0; margin-bottom: 0.3rem; background: none; border-right: none;
+    justify-content: flex-start; align-items: center; min-height: 1.75rem;
   }
-  .hf-f-row:not(.hf-f-static) > .hf-f-head .hf-f-label {
-    position: absolute; left: 0.6rem; top: 0.85rem; max-width: calc(100% - 3rem);
-    overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
-    color: var(--hf-muted); pointer-events: none; transition: top 0.12s, font-size 0.12s;
-  }
-  .hf-f-row:not(.hf-f-static):focus-within > .hf-f-head .hf-f-label,
-  .hf-f-row.hf-filled:not(.hf-f-static) > .hf-f-head .hf-f-label { top: 0.3rem; font-size: 0.72rem; }
-  .hf-f-row:not(.hf-f-static) > .hf-f-head .hf-help-btn { position: absolute; right: 0.35rem; top: 0.5rem; }
-  .hf-f-row:not(.hf-f-static) > .hf-f-body { padding: 0; }
-  .hf-f-row:not(.hf-f-static) > .hf-f-body > .hf-box { padding-top: 1.05rem; }
-  .hf-f-row.hf-has-help:not(.hf-f-static) > .hf-f-body > .hf-box { padding-right: 2rem; }
-  .hf-f-row:not(.hf-f-static) .hf-control { padding-top: 0.2rem; }
-  .hf-f-row:not(.hf-f-static) .hf-control::placeholder { opacity: 0; }
-  .hf-f-row:not(.hf-f-static) .hf-control:focus::placeholder { opacity: 0.6; transition: opacity 0.1s 0.12s; }
-  .hf-f-row.hf-f-static { display: block; }
-  .hf-f-row.hf-f-static > .hf-f-head { border-right: none; justify-content: flex-start; }
-  .hf-f-row.hf-f-static > .hf-f-head .hf-f-label { font-weight: 600; }
+  .hf-f-row > .hf-f-head .hf-f-label { font-weight: 600; }
+  .hf-f-row > .hf-f-body { padding: 0; }
 }
 
 /* ---------- wyjaśnienia ---------- */
@@ -245,12 +218,15 @@ textarea.hf-control { resize: vertical; }
 .hf-th-small { font-size: 0.82em; }
 .hf-col-param { width: 9rem; }
 .hf-col-ind { width: 15rem; }
-.hf-col-grade { width: 6.5rem; }
-/* ocena wskaźnika: mieści select, „Przyjmij X” i ostrzeżenie o odejściu od progów */
-.hf-col-grade-ind { width: 12rem; }
+/* ocena wskaźnika i parametru w jednej kolumnie, obok siebie */
+.hf-col-grades { width: 15rem; }
+.hf-grades { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 0.5rem; align-items: start; }
+.hf-grades-ind, .hf-grades-param { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; min-width: 0; }
+.hf-grades-param { border-left: 1px dashed var(--hf-border); padding-left: 0.5rem; }
+.hf-grades-cap { font-size: 0.75rem; color: var(--hf-muted); text-transform: uppercase; letter-spacing: 0.03em; }
+.hf-grades-note { font-size: 0.75rem; color: var(--hf-muted); text-align: center; line-height: 1.25; }
 .hf-grade-cell .hf-warn, .hf-grade-cell .hf-hint { text-align: left; overflow-wrap: break-word; hyphens: auto; }
 .hf-param { font-weight: 700; text-align: center !important; vertical-align: middle !important; }
-.hf-param-mobile { display: none; }
 .hf-ind { font-weight: 400; }
 .hf-ind-cardinal { font-weight: 700; }
 .hf-param-grade, .hf-grade-cell { text-align: center !important; }
@@ -307,7 +283,7 @@ textarea.hf-control { resize: vertical; }
 .hf-species-head { font-size: 0.85em; color: var(--hf-muted); margin-bottom: 0.2rem; }
 .hf-tag { font-size: 0.82em; color: var(--hf-accent); padding-top: 0.45rem; }
 .hf-tag-unknown { color: var(--hf-muted); font-style: italic; }
-.hf-adder { max-width: 30rem; }
+.hf-adder { max-width: none; }
 .hf-releve-row {
   display: grid; grid-template-columns: 4.8rem minmax(10rem, 2fr) minmax(9rem, 1.3fr) minmax(0, 1.2fr) auto;
   gap: 0.45rem; align-items: start;
@@ -316,7 +292,6 @@ textarea.hf-control { resize: vertical; }
 /* combobox gatunków */
 .hf-combo { position: relative; flex: 1; min-width: 0; }
 .hf-combo > input { width: 100%; font: inherit; color: var(--hf-text); border: none; background: transparent; padding: 0.45rem 0.55rem; outline: none; }
-.hf-f-float .hf-combo > input { padding-top: 0.2rem; }
 .hf-combo-list {
   position: absolute; z-index: 30; left: -1px; right: -1px; top: calc(100% + 3px);
   max-height: 16rem; overflow-y: auto; margin: 0; padding: 0.25rem 0; list-style: none;
@@ -336,9 +311,10 @@ textarea.hf-control { resize: vertical; }
   .hf-status th, .hf-status td, .hf-grid-table td { border: none; }
   .hf-status tbody { border-bottom: 1px solid var(--hf-line); }
   .hf-status tr { padding: 0.4rem 0.6rem; border-top: 1px solid var(--hf-border); }
-  .hf-status .hf-param { background: var(--hf-cell); text-align: left !important; display: flex; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; padding: 0.4rem 0.6rem; margin: -0.4rem -0.6rem 0.4rem; }
-  .hf-param-mobile { display: inline-flex; gap: 0.4rem; align-items: center; font-weight: 400; }
-  .hf-param-grade { display: none !important; }
+  .hf-status tr.hf-group-row { padding: 0; }
+  .hf-grades { grid-template-columns: auto minmax(0, 1fr); }
+  .hf-grades-ind, .hf-grades-param { align-items: flex-start; }
+  .hf-grades-note { text-align: left; }
   .hf-status td[data-label]::before, .hf-grid-table td[data-label]::before {
     content: attr(data-label); display: block; font-size: 0.78em; color: var(--hf-muted); margin: 0.3rem 0 0.15rem;
   }
@@ -365,18 +341,6 @@ textarea.hf-control { resize: vertical; }
 .hf-sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
-}
-
-/* jednostka w polu z floating label: wyrównana do tekstu, widoczna dopiero podczas wpisywania */
-.hf-f-float > .hf-f-body > .hf-box { align-items: flex-end; }
-.hf-f-float .hf-box-unit { padding-bottom: 0.45rem; }
-.hf-f-float:not(.hf-filled):not(:focus-within) .hf-box-unit { visibility: hidden; }
-.hf-f-float .hf-combo > input::placeholder { opacity: 0; }
-.hf-f-float .hf-combo > input:focus::placeholder { opacity: 0.6; transition: opacity 0.1s 0.12s; }
-@media (max-width: 48rem) {
-  .hf-f-row:not(.hf-f-static) > .hf-f-body > .hf-box { align-items: flex-end; }
-  .hf-f-row:not(.hf-f-static) .hf-box-unit { padding-bottom: 0.45rem; }
-  .hf-f-row:not(.hf-filled):not(:focus-within):not(.hf-f-static) .hf-box-unit { visibility: hidden; }
 }
 
 /* ---------- dokumentacja fotograficzna ---------- */
@@ -422,7 +386,6 @@ textarea.hf-control { resize: vertical; }
   border: none; background: none; color: var(--hf-muted);
 }
 .hf .hf-date-btn:hover, .hf .hf-date-btn:focus-visible { color: var(--hf-accent); }
-.hf-f-float > .hf-f-body > .hf-box .hf-date-btn, .hf-f-row > .hf-f-body > .hf-box .hf-date-btn { align-self: flex-end; }
 .hf-date-native { position: absolute; left: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; border: 0; padding: 0; }
 
 /* ---------- dymek z wyjaśnieniem ---------- */
@@ -451,3 +414,39 @@ textarea.hf-control { resize: vertical; }
   .hf-nav > button { flex: 1 1 auto; }
   .hf-nav .hf-docx-btn, .hf-nav .hf-primary { margin-left: 0; }
 }
+
+/* ---------- zakładki na wąskim ekranie: siatka 2 kolumn na całą szerokość ---------- */
+@media (max-width: 48rem) {
+  .hf-tabs {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.4rem;
+    border-bottom: none; margin-bottom: 0.75rem;
+  }
+  .hf .hf-tab {
+    width: 100%; justify-content: center; text-align: center; white-space: normal; line-height: 1.2;
+    border-radius: 0.45rem; border-bottom: 1px solid var(--hf-btn-border); margin-bottom: 0; padding: 0.55rem 0.5rem;
+  }
+  .hf .hf-tab[aria-selected='true'] {
+    background: var(--hf-accent); color: var(--hf-accent-text); border: 1px solid var(--hf-accent); box-shadow: none;
+  }
+  /* „Całość” (ostatnia) na całym wierszu, gdy zostaje sama */
+  .hf .hf-tab:last-child:nth-child(odd) { grid-column: 1 / -1; }
+}
+
+/* Wczytywanie karty z pliku */
+.hf-visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.hf-file-msg { margin: 0.5rem 0 0; padding: 0.5rem 0.75rem; border-left: 4px solid var(--hf-accent); background: var(--hf-help-bg); border-radius: 0.25rem; }
+.hf-file-msg-error { border-left-color: var(--hf-error); background: var(--hf-warn-bg); color: var(--hf-warn-text); }
+.hf-draft-btn { margin-top: 0.4rem; }
+@media (max-width: 30rem) {
+  .hf-toolbar > button { width: 100%; }
+}
+
+/* wyjaśnienia kolumn list gatunków (tryb „rozwiń wszystkie”): pod nagłówkami, na całą szerokość */
+.hf-col-help { display: grid; gap: 0.4rem; margin: 0.2rem 0 0.5rem; }
+.hf-col-help > .hf-help { margin: 0; }
+
+/* nagłówki grup w tabeli stanu ochrony: „Parametr: …” na całą szerokość zamiast bocznej kolumny */
+.hf-status .hf-group-head { background: var(--hf-bar); text-align: left !important; font-weight: 700; padding: 0.5rem 0.75rem; }
+.hf-group-title { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem 1rem; flex-wrap: wrap; }
+.hf-group-grade { display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 400; font-size: 0.9em; }
+.hf-group-head > .hf-help { margin-top: 0.4rem; font-weight: 400; }

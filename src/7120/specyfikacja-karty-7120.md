@@ -32,7 +32,9 @@ Metodyka jest danymi, a formularz generuje się z niej. Kolejne siedlisko to now
 | `components/habitat-form/HabitatCardForm.tsx` | Zakładki, widok „Całość”, pasek narzędzi, zapis |
 | `components/habitat-form/StatusTable.tsx` | Tabela stanu ochrony jak w karcie |
 | `components/habitat-form/steps.tsx` | Sekcje: stanowisko, zdjęcia fitosocjologiczne, oddziaływania, zagrożenia, inne |
-| `components/habitat-form/fields.tsx` | Generyczne pola, układ wiersz/floating label, listy gatunków, wybór oceny |
+| `components/habitat-form/fields.tsx` | Generyczne pola, układ wiersz / etykieta nad polem, listy gatunków, wybór oceny |
+| `components/habitat-form/cardArchive.ts` | Zapis i odczyt karty jako .zip (karta.json + zdjecia/) |
+| `components/habitat-form/draftStore.ts` | Kopia robocza w IndexedDB |
 | `components/habitat-form/SpeciesCombobox.tsx` | Przeszukiwalny wybór gatunku |
 | `components/habitat-form/photos.tsx`, `images.ts` | Wgrywanie i zmniejszanie zdjęć |
 | `components/habitat-form/help.tsx` | Przyciski „?”, dymki z wyjaśnieniami, tryb dla początkujących, teksty wspólne |
@@ -48,17 +50,17 @@ Formularz odwzorowuje kartę docx jak najwierniej, żeby osoba wypełniająca ni
   - Kolejność jak w karcie: Stanowisko, Stan ochrony, Oddziaływania, Zagrożenia, Inne informacje, Zdjęcia fitosocjologiczne.
   - Przełączanie jest swobodne: myszą, strzałkami albo Home/End.
   - Widok „Całość” pokazuje całą kartę naraz.
-  - Pod formularzem są przyciski poprzedniej i następnej zakładki oraz „Zapisz kartę”.
+  - Pod formularzem są przyciski poprzedniej i następnej zakładki, „Pobierz kartę (.docx)” i „Zapisz kartę (.zip)”.
+  - Na samej górze, jako pierwszy przycisk, jest „Wczytaj z pliku” (patrz rozdział 8).
 - **Wygląd karty:** szare paski sekcji, pasek tytułowy „Karta obserwacji siedliska przyrodniczego na stanowisku” i etykiety pytań w lewej, szarej kolumnie, jak w docx.
-- **Floating label:** poniżej szerokości 48rem kolumna etykiet zamienia się w etykiety pływające w polu. W grupach pól (np. „Powierzchnia, nachylenie, ekspozycja”) i w panelach pomiarów etykiety pływają zawsze.
-- **Placeholder:**
-  - W polu z pływającą etykietą placeholder istnieje w DOM tylko wtedy, gdy kursor jest w samym polu.
-  - Pojawia się dopiero po animacji etykiety.
-  - Fokus na przycisku „?” go nie wywołuje.
+- **Etykiety nad polami (bez floating label):**
+  - Na szerokim ekranie wiersz karty ma etykietę w lewej, szarej kolumnie.
+  - W grupach pól (np. „Współrzędne geograficzne”, „Powierzchnia, nachylenie, ekspozycja”), w panelach pomiarów, w listach gatunków i poniżej 48rem etykieta stoi **nad** polem, a „?” obok etykiety, poza ramką pola. Jeden wzór wszędzie.
+  - Floating label (etykieta w środku pola) został wycofany: „?” lądował w ramce pola, a układ różnił się od list gatunków.
+  - Placeholder jest widoczny od razu (nie ma już z czym kolidować).
 - **Jednostki:**
   - Jednostki (m n.p.m., m², °, %, cm) siedzą wewnątrz pola.
   - Czytnik ekranu dostaje jednostkę w etykiecie.
-  - W polu z pływającą etykietą jednostka pokazuje się dopiero przy wpisywaniu albo po wypełnieniu.
 - **Szerokość:**
   - Pełny wiersz zajmują współrzędne, długie pola tekstowe i listy.
   - Pola w panelu „Pomiary i progi” idą jedno pod drugim, na pełnej szerokości.
@@ -72,8 +74,15 @@ Formularz odwzorowuje kartę docx jak najwierniej, żeby osoba wypełniająca ni
 - **Pola opisów:**
   - Startują wyżej: zwykle 6 linii, „Opis siedliska na stanowisku” 10, a komórki tabel 5.
   - Rosną razem z treścią, więc przykładowy tekst widać w całości.
-- **Kolumna „Ocena wskaźnika”** ma 12rem, żeby mieściły się „Przyjmij X” i ostrzeżenie o odejściu od progów.
+- **Tabela stanu ochrony:**
+  - Zamiast bocznej kolumny „Parametr” są wiersze-nagłówki grup na całą szerokość: „Parametr: Powierzchnia”, „Parametr: Specyficzna struktura i funkcja”, „Parametr: Perspektywy ochrony”, „Ocena ogólna”. Przy parametrach z wieloma wskaźnikami nagłówek pokazuje też ocenę parametru.
+  - Kolumny: Wskaźniki | Wartość lub opis | Ocena wskaźnika i parametru.
+  - Ocena wskaźnika i ocena parametru są w **jednej** kolumnie (15rem), obok siebie: „WSKAŹNIKA” (select, „Przyjmij X”, ostrzeżenie) i „PARAMETRU” (odznaka). Ocena parametru powtarza się przy każdym wskaźniku z dopiskiem „wynika z ocen wszystkich wskaźników parametru” (albo „wynika z oceny wskaźnika”, gdy wskaźnik jest jeden). Dwie osobne wąskie kolumny były nieczytelne.
+- **Pola pokrycia gatunków** trzymają wpisany tekst lokalnie i nie nadpisują go wartością z formularza przy każdym renderze – dzięki temu da się skasować całą liczbę i wpisać nową. Reset/wczytanie karty przemontowuje formularz, więc tekst bierze się z danych na nowo.
+- **Wiersz „Dodaj gatunek”** (zdjęcia fitosocjologiczne) zajmuje całą szerokość komórki.
 - **Telefon:** tabele zamieniają się w karty z etykietą przy każdej komórce.
+  - Poniżej 48rem zakładki układają się w siatkę dwóch równych kolumn na całą szerokość. Nieparzysta ostatnia („Całość”) zajmuje cały wiersz. Wybrana zakładka ma zielone tło.
+  - Poniżej 30rem przyciski paska narzędzi („Wczytaj z pliku”, przykłady, „Wyczyść”) też zajmują całą szerokość.
   - Cele dotyku są większe: przyciski mają min. 2,5 rem, a „?” 1,75 rem.
   - Przyciski stopki zajmują całą szerokość.
   - Efekt hover działa tylko na urządzeniach z myszą, więc po dotknięciu nie zostaje „przyklejony”.
@@ -81,7 +90,7 @@ Formularz odwzorowuje kartę docx jak najwierniej, żeby osoba wypełniająca ni
   - Kolory są zmiennymi `--hf-*` na `.hf`. Ciemne wartości nadpisuje `@media (prefers-color-scheme: dark)`.
   - Nie używamy funkcji `light-dark()`. Minifikator CSS w buildzie Vite zamienia ją na protezę, która działa tylko wtedy, gdy `color-scheme` jest zadeklarowane w tym samym przetwarzanym CSS. Bez tego w wersji produkcyjnej znikały ramki i tła przycisków.
   - Przyciski mają własne tło i jaśniejszą ramkę. Pola wpisywania są ciemniejsze od tła.
-  - Wybrana zakładka ma zielony pasek u góry.
+  - Wybrana zakładka ma zielony pasek u góry (na telefonie: zielone tło).
   - Checkbox i natywne kontrolki dostają `color-scheme` oraz `accent-color`.
   - `.hf` ustawia własną czcionkę (system-ui), więc nie zależy od `index.html`.
 
@@ -118,8 +127,8 @@ To wgrywanie zdjęć, a nie pole tekstowe.
 - **Pozycja bez pliku:** pozycja może mieć sam podpis, a plik da się dołączyć później.
 - **Zapis:**
   - Zdjęcia są zmniejszane do 1600 px (JPEG).
-  - Trafiają do JSON-a karty jako data URL, bo bez backendu nie ma innego miejsca.
-  - To ok. 300 kB na zdjęcie.
+  - W formularzu trzymane są jako data URL (ok. 300 kB na zdjęcie).
+  - „Zapisz kartę” zapisuje je jako zwykłe pliki w folderze `zdjecia/` archiwum .zip, a nie jako base64 w JSON-ie (rozdział 8).
   - Jeśli przeglądarka nie umie przeskalować pliku, zostaje oryginał.
 - Pliki, które nie są obrazami, są pomijane z komunikatem.
 
@@ -155,6 +164,11 @@ Formularz podpowiada ocenę z progów przewodnika, ale ostatnie słowo ma eksper
   - W każdym innym przypadku wychodzi U1.
 - **Ocena ogólna:** najgorsza z ocen powierzchni, struktury i perspektyw ochrony. XX liczy się tylko wtedy, gdy nie ma U1 ani U2. Formularz liczy ją sam, a użytkownik pisze uzasadnienie.
 - **Ostrzeżenia merytoryczne:** na przykład pokrycie krzewów powyżej 50% sugeruje siedlisko 91D0.
+- **Wskaźniki z listą gatunków w kolumnie „Wartość lub opis”** (wybierałka gatunku + pokrycie + „Dodaj gatunek”, jak przy gatunkach charakterystycznych):
+  - **Gatunki ekspansywne:** lista „Gatunki ekspansywne na transekcie”. Pole „Łączne pokrycie gatunków ekspansywnych” w panelu pomiarów jest opcjonalne; puste oznacza sumę pokryć z listy. Progi: ≤25% FV, ≤75% U1, powyżej U2.
+  - **Krzewy i podrost drzew:** lista „Drzewa i krzewy na transekcie”. „Ogólne pokrycie” jest opcjonalne, bo pokrycia gatunków nakładają się na siebie; puste oznacza sumę z listy. Progi: ≤10% FV, ≤30% U1, powyżej U2; powyżej 50% ostrzeżenie o 91D0.
+  - **Udział dobrze wykształconych płatów:** lista „Gatunki budujące dobrze wykształcone płaty” służy tylko dokumentacji. Ocena dalej liczy się z wpisanego udziału w %.
+  - „Wstaw z pomiarów” buduje opis z listy, np. „Ogólne pokrycie drzew i krzewów 1% – Betula pendula 1%, Betula pubescens <1%, …”.
 
 ## 6. Gatunki
 
@@ -182,16 +196,16 @@ Wybór gatunku to przeszukiwalny combobox z katalogu, z możliwością dodania p
 
 ## 7. Wyjaśnienia pól
 
-Każde pole ma przycisk „?”, który otwiera dymek nad formularzem z szerokim wyjaśnieniem: co wpisać i dlaczego. Dymek jest poza kolumną, więc jej szerokość go nie ściska. Zamyka go Escape, kliknięcie obok albo ✕.
+Każde pole ma przycisk „?”, który otwiera dymek z szerokim wyjaśnieniem: co wpisać i dlaczego. Dymek otwiera się **nad** przyciskiem (żeby nie zasłaniać pola, którego dotyczy); pod spodem tylko wtedy, gdy nad nim brakuje miejsca. Jest poza kolumną, więc jej szerokość go nie ściska. Zamyka go Escape, kliknięcie obok albo ✕.
 
 - Wyjaśnienia mają dwie warstwy: instrukcję dla początkującego i uzasadnienie metodyczne (akapit „Dlaczego: …”) dla zaawansowanego, bez szukania w przewodniku.
 - Wyjaśnienia mają też nagłówki wskaźników, kolumn tabeli, oddziaływań, skal B-B i warstw.
-- Przełącznik „Rozwiń wszystkie wyjaśnienia (tryb dla początkujących)” pokazuje wszystkie wyjaśnienia naraz jako panele w treści. Pole z takim panelem zajmuje cały wiersz grupy.
+- Przełącznik „Rozwiń wszystkie wyjaśnienia (tryb dla początkujących)” pokazuje wszystkie wyjaśnienia naraz jako panele w treści, pod etykietą/polem. Pole z takim panelem zajmuje cały wiersz grupy. Wyjaśnienia kolumn list gatunków („Gatunek”, „Pokrycie”, „Warstwa”, „Ilościowość”) idą pod całym wierszem nagłówków, na pełnej szerokości – w kolumnie siatki tekst łamał się po jednym słowie.
 - Test pilnuje, żeby każde pole metodyki miało wyjaśnienie dłuższe niż 60 znaków.
 
 ## 8. Walidacja, zapis, przykłady i anonimizacja
 
-Błędy pokazują się dopiero wtedy, gdy mają sens, a zapis bez backendu oznacza pobranie pliku JSON.
+Błędy pokazują się dopiero wtedy, gdy mają sens, a zapis bez backendu oznacza pobranie pliku .zip z danymi i zdjęciami.
 
 - **Walidacja:**
   - Pola wymagane mają gwiazdkę, a komunikaty są po polsku.
@@ -202,7 +216,19 @@ Błędy pokazują się dopiero wtedy, gdy mają sens, a zapis bez backendu oznac
   - Skok do pierwszej zakładki z błędem.
   - Znacznik „zawiera błędy” na zakładkach.
   - Pod tabelą stanu ochrony jest lista brakujących ocen.
-- **Zapis poprawny:** podgląd i pobranie karty jako JSON, łącznie ze zdjęciami.
+  - W komunikacie jest przycisk „Zapisz mimo braków (wersja robocza)”, który zapisuje .zip bez walidacji, żeby nie stracić niedokończonej karty.
+- **Zapis poprawny („Zapisz kartę (.zip)”):**
+  - Pobiera `Karta_<kod>_<stanowisko>_<data>.zip`, np. `Karta_7120_Reptowo_2_14.07.2025.zip`.
+  - W środku `karta.json`: `{ format: "fitos-karta", version: 1, habitat, savedAt, values, assessment }`. `assessment` jest dla czytającego plik; przy wczytaniu oceny liczą się od nowa.
+  - Zdjęcia leżą obok jako zwykłe pliki w `zdjecia/` (np. `zdjecia/01_photos_IMG_001.jpg`, zdjęcia z wierszy fitosocjologicznych z prefiksem `zdjecie-fito-N-`). W JSON-ie zamiast data URL jest pole `file` ze ścieżką. Archiwum otwiera zwykły archiwizator.
+  - Pod formularzem zostaje potwierdzenie z nazwą pliku, oceną ogólną, przyciskiem „Pobierz ponownie (.zip)” i podglądem danych (zdjęcia w podglądzie jako „[zdjęcie, N kB]”).
+  - Biblioteka: `fflate`. Zdjęcia idą bez kompresji (JPEG i tak jest skompresowany), JSON z kompresją.
+- **Wczytanie („Wczytaj z pliku”, pierwszy przycisk na górze):**
+  - Przyjmuje .zip zapisany przez formularz i stary .json z dawnego „Pobierz JSON” (`{ habitat, ...values, assessment }`, zdjęcia jako data URL).
+  - Zdjęcia wracają z archiwum do formularza. Brakujący plik zdjęcia nie blokuje wczytania: podpis zostaje, a komunikat wymienia brakujące pliki.
+  - Karta innego siedliska (np. 91D0 w formularzu 7120), plik bez `karta.json` albo nie-karta dają czytelny komunikat zamiast cichej porażki.
+  - Brakujące pola (np. karta zapisana starszą wersją metodyki) uzupełniają się pustymi wartościami.
+  - Po wczytaniu formularz wraca na pierwszą zakładkę, a nad zakładkami jest „Wczytano kartę z pliku … , zdjęć: N.”.
 - **Przykłady:**
   - Przyciski „Wczytaj przykład: Reptowo 2” i „Wczytaj przykład: Reptowo IV” ładują dane z karty docx.
   - Obie karty dają ocenę ogólną U2.
@@ -211,6 +237,26 @@ Błędy pokazują się dopiero wtedy, gdy mają sens, a zapis bez backendu oznac
   - Prawdziwe nazwisko obserwatora z docx nie występuje nigdzie w kodzie, przykładach ani testach.
   - W jego miejscu jest „Jan Kowalski”, a w podpisach zdjęć „(fot. J. Kowalski)”.
   - Test sprawdza to pozytywnie, bez wpisywania prawdziwego nazwiska.
+
+## 8a. Pamięć urządzenia i potwierdzenia
+
+To ważny formularz, więc nic nie ginie po cichu.
+
+- **Kopia robocza:** każda zmiana (ok. 0,4 s po ostatnim wpisie) zapisuje się w IndexedDB przeglądarki (baza `fitos`, klucz `karta-<kod>`), razem ze zdjęciami. localStorage odpada, bo ma ~5 MB.
+- Przy otwarciu formularza karta wraca z pamięci z komunikatem „Przywrócono kartę z pamięci urządzenia (ostatnia zmiana: …)”. Pod przyciskami jest stała informacja, kiedy ostatnio zapisano.
+- Aplikacja prosi przeglądarkę o trwałą pamięć (`navigator.storage.persist()`), żeby nie wyczyściła danych przy braku miejsca.
+- **Kasowanie tylko przez „Wyczyść”** i dopiero po potwierdzeniu („Na pewno wyczyścić kartę? …”). Zgoda usuwa też kopię z pamięci.
+- **Potwierdzenia przy nadpisaniu:** „Wczytaj przykład” i „Wczytaj z pliku” pytają, czy zastąpić wpisane dane. Pusta karta – bez pytań.
+- **Cofanie:** przycisk/gest „wstecz” przy wpisanych danych pyta „Na pewno chcesz się wycofać z formularza?”. Zamknięcie lub odświeżenie strony – standardowe pytanie przeglądarki.
+
+## 8b. PWA i praca offline
+
+- `vite-plugin-pwa` (workbox): manifest (nazwa „FITOS – karty obserwacji siedlisk”, `lang: pl`, `display: standalone`, ikony 192/512 i maskowalna), service worker z `registerType: autoUpdate`.
+- Precache obejmuje całą aplikację, także leniwie ładowany eksport .docx (limit pliku podniesiony do 6 MB). Po pierwszym otwarciu z siecią formularz, zapis .zip, wczytywanie i eksport .docx działają bez zasięgu.
+- Nawigacja offline wraca do `index.html` (HashRouter, więc wszystkie trasy działają).
+- Instalacja: Android/Chrome – „Zainstaluj aplikację” w menu (albo baner); iPhone/Safari – Udostępnij → „Do ekranu początkowego”.
+- Sprawdzone w Chromium (emulacja Pixel 7): po przejściu w tryb offline przeładowanie strony działa, karta wraca z pamięci, .docx się pobiera.
+- Pliki poza `src/7120`: `vite.config.ts` (blok `VitePWA`), `index.html` (meta theme-color, apple-touch-icon, `lang="pl"`), `public/` (ikony).
 
 ## 9. Eksport do Worda
 
@@ -237,14 +283,16 @@ Przycisk „Pobierz kartę (.docx)” obok „Zapisz kartę” zapisuje kartę w
 
 ## 10. Testy i otwarte kwestie
 
-Jest 70 testów i wszystkie przechodzą. `tsc` i build są czyste, a wygląd sprawdzono w przeglądarce przy 1280 i 390 px.
+Jest 85 testów i wszystkie przechodzą. `tsc` i build są czyste, a wygląd sprawdzono w przeglądarce przy 1280 i 390 px.
 
 - **Zakres testów:**
   - logika ocen,
   - metodyka 7120 (kolejność wskaźników, progi, przykłady, wyjaśnienia, anonimizacja, warstwy katalogu),
   - wyszukiwarka gatunków,
-  - formularz (zakładki, kolumny tabeli, jednostki, klawiatura, zapis z błędami, przyjmowanie podpowiedzi, gatunki własne, kody oddziaływań, dodawanie i usuwanie zdjęć fitosocjologicznych, wyjaśnienia, placeholdery, wgrywanie zdjęć).
+  - zapis i odczyt .zip (round-trip ze zdjęciem, brak zdjęcia w archiwum, stary JSON, zła karta, nazwa pliku),
+  - formularz (zakładki, kolumny tabeli, jednostki, klawiatura, zapis z błędami, przyjmowanie podpowiedzi, gatunki własne, kody oddziaływań, dodawanie i usuwanie zdjęć fitosocjologicznych, wyjaśnienia, placeholdery, wgrywanie zdjęć, „Wczytaj z pliku”, wersja robocza, etykiety nad polami, kasowanie pokrycia, wyjaśnienia kolumn w trybie dla początkujących),
+  - kopia robocza i potwierdzenia (przywrócenie po ponownym otwarciu, „Wyczyść” z anulowaniem i zgodą, brak pytań przy pustej karcie, „wstecz”).
 - **Otwarte kwestie:**
   - Nachodzenie placeholdera na etykietę (np. przy „Ekspozycji”) nie dało się odtworzyć w Chromium. Poprawka nie zależy od przeglądarki, ale trzeba ją potwierdzić w przeglądarce, w której wystąpił problem.
-  - Przy wielu zdjęciach JSON karty robi się duży (30 zdjęć to ok. 9 MB). Trwałe przechowywanie wymaga backendu albo eksportu zdjęć osobno.
+  - Karta żyje tylko w pliku .zip na dysku użytkownika. Trwałe przechowywanie i współdzielenie wymaga backendu.
   - Lista kodów oddziaływań i katalog gatunków obejmują to, co najczęstsze dla 7120, a nie pełne słowniki.

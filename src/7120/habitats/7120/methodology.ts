@@ -54,6 +54,15 @@ const AREA_TREND = [
 const labelOf = (opts: { value: string; label: string }[], v: unknown) =>
   opts.find((o) => o.value === v)?.label ?? ''
 
+/** Suma pokryć z listy gatunków (undefined, gdy żaden nie ma pokrycia). */
+function sumCover(i: InputValues): number | undefined {
+  const covers = speciesRows(i.species).map((r) => num(r.cover)).filter((v): v is number => v !== undefined)
+  return covers.length ? Math.round(covers.reduce((a, b) => a + b, 0) * 10) / 10 : undefined
+}
+
+/** Pokrycie łączne: wpisane ręcznie, a jak nie ma – suma z listy gatunków. */
+const totalCover = (i: InputValues) => num(i.cover) ?? sumCover(i)
+
 const SPECIES_LIST_HELP = `Szukaj gatunku po kilku literach nazwy naukowej albo polskiej (np. „sph fal”, „żurawina”) i wybierz z listy. Każdy wybrany gatunek dostaje wiersz, w którym wpisujesz pokrycie. Gatunku spoza katalogu nie szukaj na siłę: wybierz „Dodaj własny”. Nazwy z katalogu są rozpoznawane przy liczeniu podpowiedzi oceny, własne nie.
 
 Pokrycie podawaj w procentach całego transektu (rzut pionowy roślin na powierzchnię), z dokładnością do dziesiątek procent, a dla małych wartości do pojedynczych procent. Dla „<1%” wpisz 0,5.`
@@ -533,11 +542,31 @@ Dlaczego: gatunki obce pojawiają się na torfowisku zwykle dopiero po silnym pr
 
 Dlaczego: gdy poziom wody spada, torf się napowietrza i murszeje, uwalniając składniki pokarmowe. Trzęślica i wrzos to wykorzystują i wypierają gatunki torfowiskowe, a gęsta darń trzęślicy dodatkowo zacienia torfowce. Ich pokrycie mówi więc, jak daleko zaszło przesuszenie i w którą stronę idzie sukcesja. Wskaźnik kardynalny.`,
       thresholds: { FV: 'Zajmują do 25% powierzchni', U1: 'Zajmują 26–75% powierzchni', U2: 'Zajmują powyżej 75% powierzchni' },
-      inputs: [pct('cover', 'Łączne pokrycie gatunków ekspansywnych', {
-          help: 'Suma pokrycia wszystkich rodzimych gatunków ekspansywnych (trzęślica, wrzos, trzcina…) w % transektu. Jeśli trzęślica ma 40%, a wrzos 15%, wpisz 55. Pełne wyjaśnienie pod „?” przy nazwie wskaźnika.',
-        })],
-      suggest: (i) => gradeByUpperBounds(num(i.cover), 25, 75),
-      describe: (i) => `Łączne pokrycie ${fmt(num(i.cover))}`,
+      inputs: [
+        {
+          kind: 'species',
+          name: 'species',
+          label: 'Gatunki ekspansywne na transekcie',
+          help: `Rodzime gatunki ekspansywne z pokryciem w % transektu: trzęślica modra Molinia caerulea, wrzos Calluna vulgaris, trzcina pospolita Phragmites australis i inne, które wypierają roślinność torfowiskową. Gdy nie wpiszesz łącznego pokrycia w „Pomiarach”, formularz liczy je jako sumę z tej listy.
+
+${SPECIES_LIST_HELP}`,
+        },
+        pct('cover', 'Łączne pokrycie gatunków ekspansywnych', {
+          required: false,
+          help: 'Suma pokrycia wszystkich rodzimych gatunków ekspansywnych (trzęślica, wrzos, trzcina…) w % transektu. Puste – liczy się suma z listy gatunków. Jeśli trzęślica ma 40%, a wrzos 15%, wychodzi 55. Pełne wyjaśnienie pod „?” przy nazwie wskaźnika.',
+        }),
+      ],
+      suggest: (i) => gradeByUpperBounds(totalCover(i), 25, 75),
+      explain: (i) => {
+        const t = totalCover(i)
+        if (t === undefined) return null
+        return num(i.cover) === undefined ? `Łączne pokrycie z listy gatunków: ${fmt(t)}.` : `Łączne pokrycie: ${fmt(t)}.`
+      },
+      describe: (i) => {
+        const list = describeSpecies(speciesRows(i.species))
+        if (list) return num(i.cover) === undefined ? list : `${list} (łącznie ${fmt(num(i.cover))})`
+        return totalCover(i) === undefined ? '' : `Łączne pokrycie ${fmt(totalCover(i))}`
+      },
     },
     {
       id: 'woody',
@@ -553,17 +582,40 @@ Dlaczego: zarastanie lasem to typowy skutek odwodnienia. Drzewa dodatkowo osusza
         U1: 'Łączne pokrycie 11–30%',
         U2: 'Łączne pokrycie 31–60% (płaty o zwarciu drzew powyżej 50% to już bór bagienny)',
       },
-      inputs: [pct('cover', 'Łączne pokrycie drzew i krzewów', {
-          help: 'Pokrycie wszystkich drzew i krzewów razem (z podrostem i siewkami) w rzucie pionowym, w % transektu. Korony nakładające się na siebie liczy się raz – dlatego to nie musi być suma pokryć gatunków.',
-        })],
-      suggest: (i) => gradeByUpperBounds(num(i.cover), 10, 30),
+      inputs: [
+        {
+          kind: 'species',
+          name: 'species',
+          label: 'Drzewa i krzewy na transekcie',
+          help: `Każdy gatunek drzewa i krzewu (z podrostem i siewkami) z pokryciem w % transektu: sosna Pinus sylvestris, brzozy Betula pendula i B. pubescens, kruszyna Frangula alnus, świerk, wierzby. Łączne pokrycie wpisz w „Pomiarach” – korony nakładają się, więc nie musi być sumą gatunków. Gdy go nie wpiszesz, formularz przyjmie sumę z listy.
+
+${SPECIES_LIST_HELP}`,
+        },
+        pct('cover', 'Łączne pokrycie drzew i krzewów', {
+          required: false,
+          help: 'Pokrycie wszystkich drzew i krzewów razem (z podrostem i siewkami) w rzucie pionowym, w % transektu. Korony nakładające się na siebie liczy się raz – dlatego to nie musi być suma pokryć gatunków. Puste – liczy się suma z listy gatunków.',
+        }),
+      ],
+      suggest: (i) => gradeByUpperBounds(totalCover(i), 10, 30),
+      explain: (i) => {
+        const t = totalCover(i)
+        if (t === undefined) return null
+        return num(i.cover) === undefined
+          ? `Łączne pokrycie z sumy gatunków: ${fmt(t)} (korony się nakładają – jeśli realnie jest mniej, wpisz je w „Pomiarach”).`
+          : `Łączne pokrycie: ${fmt(t)}.`
+      },
       warn: (i) => {
-        const v = num(i.cover)
+        const v = totalCover(i)
         return v !== undefined && v > 50
           ? 'Zwarcie drzew powyżej 50% – to już raczej bór bagienny (91D0), nie 7120. Sprawdź wyznaczenie stanowiska.'
           : null
       },
-      describe: (i) => `Ogólne pokrycie drzew i krzewów ${fmt(num(i.cover))}`,
+      describe: (i) => {
+        const t = totalCover(i)
+        const list = describeSpecies(speciesRows(i.species))
+        if (t === undefined) return list
+        return list ? `Ogólne pokrycie drzew i krzewów ${fmt(t)} – ${list}` : `Ogólne pokrycie drzew i krzewów ${fmt(t)}`
+      },
     },
     {
       id: 'wellDeveloped',
@@ -579,15 +631,30 @@ Dlaczego: to bezpośrednia miara tego, ile siedliska ma już właściwą struktu
         U1: '1–25%',
         U2: 'Brak dobrze wykształconych płatów',
       },
-      inputs: [pct('share', 'Udział dobrze wykształconych płatów na transekcie', {
+      inputs: [
+        {
+          kind: 'species',
+          name: 'species',
+          label: 'Gatunki budujące dobrze wykształcone płaty',
+          help: `Gatunki, które tworzą dobrze wykształcone płaty (zwykle torfowce i gatunki charakterystyczne Oxycocco-Sphagnetea), z pokryciem w % transektu. To dokumentacja: ocena wskaźnika wynika z udziału płatów wpisanego w „Pomiarach”, nie z tej listy. Brak takich płatów – zostaw listę pustą.
+
+${SPECIES_LIST_HELP}`,
+        },
+        pct('share', 'Udział dobrze wykształconych płatów na transekcie', {
           help: 'Procent długości/powierzchni transektu, na którym roślinność wygląda jak na żywym torfowisku (torfowce, gatunki charakterystyczne, brak dominacji trzęślicy i drzew). Brak – 0.',
-        })],
+        }),
+      ],
       suggest: (i) => {
         const v = num(i.share)
         if (v === undefined) return null
         return v >= 25 ? 'FV' : v > 0 ? 'U1' : 'U2'
       },
-      describe: (i) => fmt(num(i.share)),
+      describe: (i) => {
+        const list = describeSpecies(speciesRows(i.species))
+        const share = num(i.share)
+        if (share === undefined) return list
+        return list ? `${fmt(share)} – ${list}` : fmt(share)
+      },
     },
     {
       id: 'hydration',
@@ -753,7 +820,7 @@ Dlaczego: monitoring ma odpowiedzieć, czy ochrona działa. Bez tej informacji n
       label: 'Dokumentacja fotograficzna',
       help: `Wgraj zdjęcia przyciskiem „Dodaj zdjęcia” albo przeciągnij pliki na pole. Każde dostaje podpis „Fot. N.” – dopisz, co przedstawia, i autora, np. „Fot. 1. Widok ogólny na stanowisko (fot. J. Kowalski)”. Najlepiej zdjęcia z punktów początku, środka i końca transektu, w tym samym kierunku co poprzednio.
 
-Zdjęcia są zmniejszane do 1600 px i zapisywane razem z kartą (w pliku JSON). Pozycja bez pliku (sam podpis) też jest dozwolona – np. gdy zdjęcia leżą w osobnym archiwum.
+Zdjęcia są zmniejszane do 1600 px i zapisywane razem z kartą: „Zapisz kartę” pobiera plik .zip, w którym dane są w karta.json, a zdjęcia jako zwykłe pliki w folderze zdjecia/. Pozycja bez pliku (sam podpis) też jest dozwolona – np. gdy zdjęcia leżą w osobnym archiwum.
 
 Dlaczego: zdjęcia z tych samych punktów to najprostszy sposób, żeby za kilka lat zobaczyć zmianę bez czytania tabel.`,
     },
