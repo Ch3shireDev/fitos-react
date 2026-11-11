@@ -1,33 +1,69 @@
 /* Formularz karty siedliska – wygląd wzorowany na karcie obserwacji GIOŚ (szare paski sekcji, tabela etykieta | wartość).
-   Kolory przez light-dark(), więc wymaga `color-scheme: light dark` na :root. */
+   Tryb ciemny przez @media (prefers-color-scheme), bez funkcji light-dark: minifikator CSS w buildzie Vite zamienia ją
+   na protezę, która działa tylko wtedy, gdy `color-scheme` jest zadeklarowane w tym samym przetwarzanym CSS. Bez tego
+   w wersji produkcyjnej wszystkie kolory (ramki, tła przycisków) po prostu znikały. */
 .hf {
-  --hf-bg: light-dark(#ffffff, #16181b);
-  --hf-surface: light-dark(#f5f6f4, #1f2226);
-  --hf-border: light-dark(#c9cdc6, #3a3f45);
-  --hf-line: light-dark(#8c8f8a, #4a5058);
-  --hf-text: light-dark(#1d2320, #e7eae6);
-  --hf-muted: light-dark(#5b665f, #a3ada6);
-  --hf-accent: light-dark(#2f6b3f, #7fc18f);
-  --hf-accent-text: light-dark(#ffffff, #10140f);
-  --hf-error: light-dark(#b3261e, #ff8a80);
-  --hf-warn-bg: light-dark(#fff4d6, #3a3018);
-  --hf-warn-text: light-dark(#6b4e00, #f3d27a);
-  --hf-help-bg: light-dark(#eef5ef, #1c2a20);
-  /* kolory karty: jak w docx (D9D9D9 nagłówki sekcji, F2F2F2 kolumna etykiet) */
-  --hf-bar: light-dark(#d9d9d9, #2c3036);
-  --hf-bar-strong: light-dark(#bfbfbf, #363b42);
-  --hf-cell: light-dark(#f2f2f2, #1d2024);
-  --hf-fv: light-dark(#2e7d32, #81c784);
-  --hf-u1: light-dark(#b26a00, #ffb74d);
-  --hf-u2: light-dark(#c62828, #ef9a9a);
-  --hf-xx: light-dark(#616161, #bdbdbd);
-
+  color-scheme: light dark;
+  --hf-bg: #ffffff;
+  --hf-surface: #f5f6f4;
+  --hf-border: #c9cdc6;
+  --hf-line: #8c8f8a;
+  --hf-text: #1d2320;
+  --hf-muted: #5b665f;
+  --hf-accent: #2f6b3f;
+  --hf-accent-text: #ffffff;
+  --hf-error: #b3261e;
+  --hf-warn-bg: #fff4d6;
+  --hf-warn-text: #6b4e00;
+  --hf-help-bg: #eef5ef;
+  --hf-bar: #d9d9d9;
+  --hf-bar-strong: #bfbfbf;
+  --hf-cell: #f2f2f2;
+  --hf-fv: #2e7d32;
+  --hf-u1: #b26a00;
+  --hf-u2: #c62828;
+  --hf-xx: #616161;
+  --hf-input: #ffffff;
+  --hf-btn: #f5f6f4;
+  --hf-btn-border: #b5bbb2;
+  --hf-btn-hover: #e8ebe6;
+  --hf-shadow: rgb(0 0 0 / 0.12);
+}
+@media (prefers-color-scheme: dark) {
+  .hf {
+    --hf-bg: #121417;
+    --hf-surface: #1c2024;
+    --hf-border: #4f575f;
+    --hf-line: #6b747d;
+    --hf-text: #eef1ef;
+    --hf-muted: #b3bcb6;
+    --hf-accent: #8fd19e;
+    --hf-accent-text: #0b130d;
+    --hf-error: #ff8a80;
+    --hf-warn-bg: #3d3216;
+    --hf-warn-text: #f6d77f;
+    --hf-help-bg: #1b2a1f;
+    --hf-bar: #2c3238;
+    --hf-bar-strong: #384048;
+    --hf-cell: #1a1e22;
+    --hf-fv: #86d08a;
+    --hf-u1: #ffc061;
+    --hf-u2: #ff9a94;
+    --hf-xx: #c4c4c4;
+    --hf-input: #0d0f11;
+    --hf-btn: #2b3138;
+    --hf-btn-border: #6f7a84;
+    --hf-btn-hover: #363e46;
+    --hf-shadow: rgb(0 0 0 / 0.55);
+  }
+}
+.hf {
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   max-width: 76rem;
   margin: 0 auto;
   padding: 1rem;
   color: var(--hf-text);
   background: var(--hf-bg);
-  font: inherit;
   line-height: 1.45;
 }
 .hf * { box-sizing: border-box; }
@@ -41,7 +77,19 @@
 
 .hf button {
   font: inherit; cursor: pointer; border-radius: 0.4rem; padding: 0.45rem 0.9rem;
-  border: 1px solid var(--hf-border); background: var(--hf-surface); color: var(--hf-text);
+  border: 1px solid var(--hf-btn-border); background: var(--hf-btn); color: var(--hf-text);
+}
+/* hover tylko tam, gdzie jest mysz – na telefonie „przyklejony” hover po dotknięciu zamazywał wybraną zakładkę */
+@media (hover: hover) {
+  .hf button:hover:not(:disabled) { background: var(--hf-btn-hover); }
+}
+.hf input[type='checkbox'] { accent-color: var(--hf-accent); width: 1.15rem; height: 1.15rem; }
+.hf button:focus-visible, .hf .hf-control:focus-visible { outline: 2px solid var(--hf-accent); outline-offset: 2px; }
+/* kontrolka w ramce .hf-box: fokus pokazuje cała ramka (zielony brzeg), a nie osobny prostokąt wokół samego inputa,
+   który przy floating label siedział w dolnej połowie pola */
+.hf .hf-box .hf-control:focus, .hf .hf-box .hf-control:focus-visible { outline: none; }
+@media (hover: hover) {
+  .hf .hf-primary:hover:not(:disabled) { background: var(--hf-accent); filter: brightness(1.08); }
 }
 .hf button:disabled { opacity: 0.45; cursor: not-allowed; }
 .hf .hf-primary { background: var(--hf-accent); color: var(--hf-accent-text); border-color: var(--hf-accent); }
@@ -56,7 +104,7 @@
   flex: none; white-space: nowrap; border-radius: 0.4rem 0.4rem 0 0; border-bottom: none;
   margin-bottom: -2px; display: inline-flex; align-items: center; gap: 0.4rem;
 }
-.hf .hf-tab[aria-selected='true'] { background: var(--hf-bg); border-color: var(--hf-border); border-bottom: 2px solid var(--hf-bg); font-weight: 700; color: var(--hf-accent); }
+.hf .hf-tab[aria-selected='true'] { box-shadow: inset 0 3px 0 var(--hf-accent); background: var(--hf-bg); border-color: var(--hf-border); border-bottom: 2px solid var(--hf-bg); font-weight: 700; color: var(--hf-accent); }
 .hf .hf-tab:focus-visible { outline: 2px solid var(--hf-accent); outline-offset: -2px; }
 .hf .hf-tab-all { font-style: italic; }
 .hf-tab-badge {
@@ -84,7 +132,7 @@
 /* ---------- pola: wspólne ---------- */
 .hf-box {
   display: flex; align-items: center; min-width: 0;
-  border: 1px solid var(--hf-border); border-radius: 0.35rem; background: var(--hf-bg);
+  border: 1px solid var(--hf-border); border-radius: 0.35rem; background: var(--hf-input);
 }
 .hf-box:focus-within { border-color: var(--hf-accent); box-shadow: 0 0 0 1px var(--hf-accent); }
 .hf-box[data-invalid='true'] { border-color: var(--hf-error); box-shadow: 0 0 0 1px var(--hf-error); }
@@ -273,7 +321,7 @@ textarea.hf-control { resize: vertical; }
   position: absolute; z-index: 30; left: -1px; right: -1px; top: calc(100% + 3px);
   max-height: 16rem; overflow-y: auto; margin: 0; padding: 0.25rem 0; list-style: none;
   background: var(--hf-bg); border: 1px solid var(--hf-border); border-radius: 0.35rem;
-  box-shadow: 0 6px 18px light-dark(rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.5));
+  box-shadow: 0 6px 18px var(--hf-shadow);
 }
 .hf-combo-option { padding: 0.35rem 0.6rem; cursor: pointer; }
 .hf-combo-active { background: var(--hf-surface); outline: 1px solid var(--hf-accent); outline-offset: -1px; }
@@ -392,3 +440,14 @@ textarea.hf-control { resize: vertical; }
 .hf .hf-popover-close { border: none; background: none; padding: 0.15rem 0.45rem; color: var(--hf-muted); }
 .hf .hf-popover-close:hover { color: var(--hf-text); }
 .hf-popover .hf-help { margin: 0; border: none; border-radius: 0; background: none; padding: 0.6rem 0.85rem 0.75rem; font-size: 1em; }
+
+/* ---------- telefon: większe cele dotyku, czytelna stopka ---------- */
+@media (pointer: coarse) {
+  .hf .hf-help-btn { width: 1.75rem; height: 1.75rem; font-size: 0.9rem; }
+  .hf button { min-height: 2.5rem; }
+  .hf .hf-help-btn, .hf .hf-popover-close, .hf .hf-date-btn { min-height: 0; }
+}
+@media (max-width: 30rem) {
+  .hf-nav > button { flex: 1 1 auto; }
+  .hf-nav .hf-docx-btn, .hf-nav .hf-primary { margin-left: 0; }
+}

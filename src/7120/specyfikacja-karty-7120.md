@@ -74,6 +74,16 @@ Formularz odwzorowuje kartę docx jak najwierniej, żeby osoba wypełniająca ni
   - Rosną razem z treścią, więc przykładowy tekst widać w całości.
 - **Kolumna „Ocena wskaźnika”** ma 12rem, żeby mieściły się „Przyjmij X” i ostrzeżenie o odejściu od progów.
 - **Telefon:** tabele zamieniają się w karty z etykietą przy każdej komórce.
+  - Cele dotyku są większe: przyciski mają min. 2,5 rem, a „?” 1,75 rem.
+  - Przyciski stopki zajmują całą szerokość.
+  - Efekt hover działa tylko na urządzeniach z myszą, więc po dotknięciu nie zostaje „przyklejony”.
+- **Tryb ciemny:**
+  - Kolory są zmiennymi `--hf-*` na `.hf`. Ciemne wartości nadpisuje `@media (prefers-color-scheme: dark)`.
+  - Nie używamy funkcji `light-dark()`. Minifikator CSS w buildzie Vite zamienia ją na protezę, która działa tylko wtedy, gdy `color-scheme` jest zadeklarowane w tym samym przetwarzanym CSS. Bez tego w wersji produkcyjnej znikały ramki i tła przycisków.
+  - Przyciski mają własne tło i jaśniejszą ramkę. Pola wpisywania są ciemniejsze od tła.
+  - Wybrana zakładka ma zielony pasek u góry.
+  - Checkbox i natywne kontrolki dostają `color-scheme` oraz `accent-color`.
+  - `.hf` ustawia własną czcionkę (system-ui), więc nie zależy od `index.html`.
 
 ## 4. Sekcje karty i pola
 
