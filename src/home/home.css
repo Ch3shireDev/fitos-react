@@ -1,0 +1,110 @@
+/* Strona główna FITOS. Kolory jak w formularzu; tryb ciemny przez @media, bez light-dark() (minifikator Vite go psuje). */
+.home {
+  --h-bg: #f3f5f2;
+  --h-surface: #ffffff;
+  --h-border: #d3d9d1;
+  --h-text: #1d2320;
+  --h-muted: #5b665f;
+  --h-accent: #2e6b3f;
+  --h-accent-text: #ffffff;
+  --h-accent-soft: #e3efe5;
+  --h-draft: #8a5a00;
+  --h-draft-bg: #fff1cc;
+  --h-shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 4px 16px rgb(0 0 0 / 0.06);
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--h-bg);
+  color: var(--h-text);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+}
+@media (prefers-color-scheme: dark) {
+  .home {
+    --h-bg: #0f1113;
+    --h-surface: #191d21;
+    --h-border: #2f363c;
+    --h-text: #eef1ef;
+    --h-muted: #a9b3ad;
+    --h-accent: #8fd19e;
+    --h-accent-text: #0b130d;
+    --h-accent-soft: #1b2a1f;
+    --h-draft: #f6d77f;
+    --h-draft-bg: #3d3216;
+    --h-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+  }
+}
+body:has(.home) { margin: 0; }
+
+.home-inner { max-width: 44rem; margin: 0 auto; padding: 2.5rem 1rem 3rem; }
+
+.home-hero { display: flex; gap: 1.25rem; align-items: center; }
+.home-logo { flex: none; border-radius: 22%; box-shadow: var(--h-shadow); }
+.home-hero h1 { margin: 0; font-size: 2.25rem; letter-spacing: 0.04em; line-height: 1.1; }
+.home-lead { margin: 0.4rem 0 0; color: var(--h-muted); font-size: 1.05rem; }
+
+.home-features { list-style: none; padding: 0; margin: 1.75rem 0 2.25rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 1.5rem; }
+.home-features li { position: relative; padding-left: 1.6rem; font-size: 0.95rem; }
+.home-features li::before {
+  content: '✓'; position: absolute; left: 0; top: 0.05rem;
+  width: 1.15rem; height: 1.15rem; border-radius: 50%;
+  display: grid; place-items: center; font-size: 0.7rem; font-weight: 700;
+  background: var(--h-accent-soft); color: var(--h-accent);
+}
+
+.home-section-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--h-muted); margin: 0 0 0.75rem; }
+
+.home-cards { list-style: none; padding: 0; margin: 0 0 2rem; display: grid; gap: 0.75rem; }
+.home-card {
+  display: flex; align-items: center; gap: 1rem;
+  padding: 1rem 1.1rem; border-radius: 0.9rem;
+  background: var(--h-surface); border: 1px solid var(--h-border); box-shadow: var(--h-shadow);
+  color: inherit; text-decoration: none;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.home-card:hover { border-color: var(--h-accent); transform: translateY(-1px); }
+.home-card:focus-visible { outline: 3px solid var(--h-accent); outline-offset: 2px; }
+.home-code {
+  flex: none; min-width: 4.6rem; padding: 0.6rem 0.5rem; border-radius: 0.6rem; text-align: center;
+  background: var(--h-accent); color: var(--h-accent-text);
+  font-weight: 700; font-size: 1.1rem; font-variant-numeric: tabular-nums;
+}
+.home-card-body { display: grid; gap: 0.2rem; min-width: 0; flex: 1; }
+.home-card-title { font-weight: 650; font-size: 1.08rem; }
+.home-card-blurb { color: var(--h-muted); font-size: 0.92rem; }
+.home-card-meta { display: flex; flex-wrap: wrap; gap: 0.4rem 0.75rem; align-items: center; color: var(--h-muted); font-size: 0.8rem; margin-top: 0.15rem; }
+.home-tag { padding: 0.05rem 0.5rem; border-radius: 999px; background: var(--h-accent-soft); color: var(--h-accent); font-weight: 600; }
+.home-tag-draft { background: var(--h-draft-bg); color: var(--h-draft); }
+.home-arrow { flex: none; font-size: 1.4rem; color: var(--h-accent); transition: transform 0.15s; }
+.home-card:hover .home-arrow { transform: translateX(3px); }
+
+.home-install {
+  padding: 1.1rem 1.25rem; border-radius: 0.9rem;
+  background: var(--h-accent-soft); border: 1px dashed var(--h-accent);
+}
+.home-install h2 { margin: 0 0 0.35rem; font-size: 1.1rem; }
+.home-install p { margin: 0 0 0.75rem; font-size: 0.95rem; }
+.home-install-done { border-style: solid; }
+.home-install-done p { margin: 0; }
+.home-install-btn {
+  font: inherit; font-weight: 650; cursor: pointer;
+  padding: 0.65rem 1.25rem; border-radius: 0.6rem; border: 0;
+  background: var(--h-accent); color: var(--h-accent-text);
+}
+.home-install-btn:focus-visible { outline: 3px solid var(--h-text); outline-offset: 2px; }
+.home-steps { margin: 0; padding-left: 1.3rem; font-size: 0.95rem; }
+.home-steps li + li { margin-top: 0.2rem; }
+.home-install-msg { margin: 0.75rem 0 0; font-weight: 600; }
+
+.home-footer { margin-top: 2rem; color: var(--h-muted); font-size: 0.8rem; }
+
+.home-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+@media (max-width: 34rem) {
+  .home-inner { padding-top: 1.5rem; }
+  .home-hero { align-items: flex-start; }
+  .home-logo { width: 64px; height: 64px; }
+  .home-hero h1 { font-size: 1.8rem; }
+  .home-features { grid-template-columns: 1fr; }
+  .home-code { min-width: 3.9rem; font-size: 0.95rem; padding: 0.5rem 0.35rem; }
+  .home-arrow { display: none; }
+}
