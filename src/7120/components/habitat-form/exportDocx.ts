@@ -18,7 +18,7 @@ import {
   WidthType,
   type IImageOptions,
 } from 'docx'
-import { assessCard, describeSpecies, num, speciesRows } from '../../habitats/assessment'
+import { assessCard, describeSpecies, habitatCode, isCardinal, num, speciesRows } from '../../habitats/assessment'
 import { isoToPl } from '../../habitats/dates'
 import {
   LAYERS,
@@ -270,7 +270,7 @@ function siteSection(m: Methodology, v: CardValues, latin: RegExp | null): Table
     new TableRow({
       children: [
         cell('Kod i nazwa siedliska przyrodniczego', { width: LABEL_W, fill: FILL.label }),
-        cell(`${m.code} ${m.name}`, { width: VALUE_W }),
+        cell(`${habitatCode(m)} ${m.name}`, { width: VALUE_W }),
       ],
     }),
     ...labelValueRows(m.siteFields, v.site ?? {}, latin),
@@ -312,7 +312,7 @@ function statusSection(m: Methodology, v: CardValues, latin: RegExp | null): Tab
     p.list.forEach((ind, idx) => {
       const iv = v.indicators?.[ind.id]
       const children = [
-        cell(ind.label, { width: S.ind, bold: ind.cardinal }),
+        cell(ind.label, { width: S.ind, bold: isCardinal(ind, v.site) }),
         cell(iv?.value ?? '', { width: S.value }, latin),
         cell(gradeText(iv?.grade ?? ''), { width: S.grade, center: true }),
       ]
@@ -482,7 +482,7 @@ function relevesTables(m: Methodology, v: CardValues, latin: RegExp | null): Tab
 export async function buildCardDocument(m: Methodology, v: CardValues): Promise<Document> {
   const latin = latinMatcher(m)
   const section = (rows: TableRow[], cols: number[]) => table(cols, rows)
-  const hasCardinal = m.indicators.some((i) => i.cardinal)
+  const hasCardinal = m.indicators.some((i) => isCardinal(i, v.site))
   const blocks = [
     ...(hasCardinal
       ? [

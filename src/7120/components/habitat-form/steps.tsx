@@ -1,5 +1,5 @@
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form'
-import { assessCard, emptyReleve } from '../../habitats/assessment'
+import { assessCard, emptyReleve, habitatCode } from '../../habitats/assessment'
 import type { CardValues } from '../../habitats/types'
 import { useMethodology } from './context'
 import { ErrorText, FieldRows, GradeBadge, IMPACT_CODES_ID, InputBox, p, toId, useFieldError } from './fields'
@@ -28,7 +28,7 @@ export function SiteSection() {
           <span className="hf-f-label">Kod i nazwa siedliska przyrodniczego</span>
         </div>
         <div className="hf-f-body hf-fixed">
-          <strong>{m.code}</strong> {m.name}
+          <strong>{habitatCode(m)}</strong> {m.name}
         </div>
       </div>
       <FieldRows fields={m.siteFields} prefix="site" />
@@ -223,7 +223,7 @@ export function ImpactsSection() {
           </tbody>
         </table>
       </div>
-      {fields.length === 0 && <p className="hf-hint">Brak oddziaływań. Na torfowisku zdegradowanym? Podejrzane.</p>}
+      {fields.length === 0 && <p className="hf-hint">Brak oddziaływań. Na stanowisku monitoringowym to rzadkość – upewnij się, że niczego nie pominięto.</p>}
       <button
         type="button"
         className="hf-secondary hf-add"

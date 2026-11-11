@@ -14,6 +14,7 @@ export default defineConfig({
       injectRegister: 'auto',
       includeAssets: ['fitos-icon.svg', 'apple-touch-icon.png', 'pwa-192.png', 'pwa-512.png', 'pwa-maskable-512.png'],
       manifest: {
+        id: '/fitos-react/',
         name: 'FITOS – karty obserwacji siedlisk',
         short_name: 'FITOS',
         description: 'Karty obserwacji siedlisk przyrodniczych w terenie, także bez zasięgu.',
@@ -25,9 +26,9 @@ export default defineConfig({
         theme_color: '#2e6b3f',
         background_color: '#111315',
         icons: [
-          { src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },
+          // Android (WebAPK) bierze wyłącznie PNG – SVG w manifeście potrafi skończyć się domyślnym droidem
+          { src: 'pwa-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
           { src: 'pwa-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
-          { src: 'fitos-icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
           { src: 'pwa-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },

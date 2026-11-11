@@ -2,7 +2,7 @@
 // Wiersz-nagłówek „Parametr: …”, pod nim: Wskaźnik | Wartość lub opis | Ocena (wskaźnika i parametru obok siebie).
 import { useState, type ReactNode } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
-import { assessCard } from '../../habitats/assessment'
+import { assessCard, isCardinal } from '../../habitats/assessment'
 import type { CardValues, IndicatorDef, InputValues } from '../../habitats/types'
 import { useMethodology } from './context'
 import { ErrorText, FieldInput, GradeBadge, GradeSelect, p, toId, useFieldError } from './fields'
@@ -84,14 +84,18 @@ function IndicatorRow({
   const { control, setValue } = useFormContext<CardValues>()
   const base = `indicators.${ind.id}`
   const inputs = (useWatch({ control, name: p(`${base}.inputs`) }) ?? {}) as InputValues
+  // wariant siedliska (np. 91D0) może zmieniać progi i kardynalność
+  const site = (useWatch({ control, name: 'site' }) ?? {}) as InputValues
+  const ctx = { site }
+  const cardinal = isCardinal(ind, site)
   const value = (useWatch({ control, name: p(`${base}.value`) }) ?? '') as string
   const [open, setOpen] = useState(false)
   const { button: helpButton, panel: helpPanel } = useHelpToggle(ind.help, ind.label)
 
-  const suggestion = ind.suggest?.(inputs) ?? null
-  const explanation = ind.explain?.(inputs) ?? null
-  const warning = ind.warn?.(inputs) ?? null
-  const described = ind.describe?.(inputs) ?? ''
+  const suggestion = ind.suggest?.(inputs, ctx) ?? null
+  const explanation = ind.explain?.(inputs, ctx) ?? null
+  const warning = ind.warn?.(inputs, ctx) ?? null
+  const described = ind.describe?.(inputs, ctx) ?? ''
   const panelId = `${toId(base)}-measure`
   // listy gatunków są widoczne od razu w kolumnie wartości, reszta pomiarów – w panelu
   const speciesInputs = ind.inputs.filter((f) => f.kind === 'species')
@@ -112,13 +116,13 @@ function IndicatorRow({
   )
 
   return (
-    <tr className={ind.cardinal ? 'hf-cardinal-row' : undefined}>
+    <tr className={cardinal ? 'hf-cardinal-row' : undefined}>
       <th scope="row" className="hf-ind" data-label="Wskaźnik">
         <span className="hf-label-row">
-          <span className={ind.cardinal ? 'hf-ind-name hf-ind-cardinal' : 'hf-ind-name'}>{ind.label}</span>
+          <span className={cardinal ? 'hf-ind-name hf-ind-cardinal' : 'hf-ind-name'}>{ind.label}</span>
           {helpButton}
         </span>
-        {ind.cardinal && <span className="hf-sr-only"> (wskaźnik kardynalny)</span>}
+        {cardinal && <span className="hf-sr-only"> (wskaźnik kardynalny)</span>}
         {helpPanel}
       </th>
       <td className="hf-val" data-label="Wartość lub opis">

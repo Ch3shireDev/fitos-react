@@ -108,12 +108,20 @@ export interface CatalogOption {
 
 export type InputValues = Record<string, unknown>
 
+/**
+ * Kontekst karty przekazywany do funkcji wskaźnika – np. wariant siedliska wybrany w „Stanowisku”
+ * (w 91D0 od wariantu zależy lista gatunków charakterystycznych i to, czy torfowce są kardynalne).
+ */
+export interface IndicatorContext {
+  site: InputValues
+}
+
 export interface IndicatorDef {
   id: string
   label: string
   parameter: 'area' | 'structure'
-  /** Wskaźnik kardynalny – decyduje o ocenie „specyficznej struktury i funkcji”. */
-  cardinal?: boolean
+  /** Wskaźnik kardynalny – decyduje o ocenie „specyficznej struktury i funkcji”. Może zależeć od wariantu siedliska. */
+  cardinal?: boolean | ((ctx: IndicatorContext) => boolean)
   /** Co opisuje wskaźnik (z tab. 1 przewodnika). */
   description: string
   /** Szerokie wyjaśnienie: co dokładnie zmierzyć, jak i dlaczego to ważne. */
@@ -125,13 +133,13 @@ export interface IndicatorDef {
   /** Pola pomiarowe, z których liczona jest podpowiedź oceny. */
   inputs: FieldDef[]
   /** Podpowiedź oceny wg progów; null = za mało danych. */
-  suggest?: (inputs: InputValues) => Grade | null
+  suggest?: (inputs: InputValues, ctx?: IndicatorContext) => Grade | null
   /** Wyjaśnienie, skąd wzięła się podpowiedź (pokazywane pod polami). */
-  explain?: (inputs: InputValues) => string | null
+  explain?: (inputs: InputValues, ctx?: IndicatorContext) => string | null
   /** Miękkie ostrzeżenie dla całego wskaźnika. */
-  warn?: (inputs: InputValues) => string | null
+  warn?: (inputs: InputValues, ctx?: IndicatorContext) => string | null
   /** Generuje tekst „wartość lub opis” z pól pomiarowych. */
-  describe?: (inputs: InputValues) => string
+  describe?: (inputs: InputValues, ctx?: IndicatorContext) => string
 }
 
 export interface StepDef {
@@ -149,6 +157,8 @@ export interface ImpactCode {
 export interface Methodology {
   code: string
   name: string
+  /** Siedlisko priorytetowe – w karcie kod z gwiazdką (*91D0). */
+  priority?: boolean
   /** Skąd to wszystko wzięto. */
   source: string
   siteFields: FieldDef[]

@@ -4,6 +4,7 @@ import type {
   FieldDef,
   Grade,
   GradeOrEmpty,
+  IndicatorDef,
   InputValues,
   Methodology,
   SpeciesRow,
@@ -127,6 +128,14 @@ export interface Assessment {
   missing: string[]
 }
 
+/** Czy wskaźnik jest kardynalny przy danym stanowisku (w 91D0 zależy od wariantu siedliska). */
+export function isCardinal(ind: IndicatorDef, site: InputValues | undefined): boolean {
+  return typeof ind.cardinal === 'function' ? ind.cardinal({ site: site ?? {} }) : Boolean(ind.cardinal)
+}
+
+/** Kod siedliska tak, jak w karcie: priorytetowe z gwiazdką. */
+export const habitatCode = (m: Methodology) => `${m.priority ? '*' : ''}${m.code}`
+
 export function assessCard(m: Methodology, values: CardValues): Assessment {
   const gradeOf = (id: string): GradeOrEmpty => values.indicators?.[id]?.grade ?? ''
   const areaIndicators = m.indicators.filter((i) => i.parameter === 'area')
@@ -134,7 +143,7 @@ export function assessCard(m: Methodology, values: CardValues): Assessment {
 
   const area = aggregateOverall(areaIndicators.map((i) => gradeOf(i.id)))
   const structure = aggregateStructure(
-    structureIndicators.map((i) => ({ grade: gradeOf(i.id), cardinal: Boolean(i.cardinal) })),
+    structureIndicators.map((i) => ({ grade: gradeOf(i.id), cardinal: isCardinal(i, values.site) })),
   )
   const prospects = values.prospects?.grade ?? ''
   const overall = aggregateOverall([area, structure, prospects])

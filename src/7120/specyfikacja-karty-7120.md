@@ -286,7 +286,9 @@ Przycisk „Pobierz kartę (.docx)” obok „Zapisz kartę” zapisuje kartę w
 
 ## 10. Testy i otwarte kwestie
 
-Jest 85 testów i wszystkie przechodzą. `tsc` i build są czyste, a wygląd sprawdzono w przeglądarce przy 1280 i 390 px.
+Silnik jest wspólny z kartą *91D0 (`src/91D0`). Dla niej doszły: `Methodology.priority` (kod z gwiazdką, `habitatCode`), `IndicatorContext { site }` przekazywany do `suggest/explain/warn/describe` oraz `cardinal` jako funkcja kontekstu (`isCardinal`). Szczegóły w `src/91D0/specyfikacja-karty-91D0.md`.
+
+Jest 114 testów (85 dla 7120 i silnika, 29 dla 91D0) i wszystkie przechodzą. `tsc` i build są czyste, a wygląd sprawdzono w przeglądarce przy 1280 i 390 px.
 
 - **Zakres testów:**
   - logika ocen,
