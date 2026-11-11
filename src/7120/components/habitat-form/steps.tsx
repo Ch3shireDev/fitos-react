@@ -38,7 +38,12 @@ export function SiteSection() {
 
 export function OtherSection() {
   const m = useMethodology()
-  return <FieldRows fields={m.otherFields} prefix="other" />
+  // bez lewej kolumny etykiet – etykiety są nagłówkami grup nad polami
+  return (
+    <div className="hf-stacked">
+      <FieldRows fields={m.otherFields} prefix="other" />
+    </div>
+  )
 }
 
 export function RelevesSection() {
@@ -64,7 +69,10 @@ export function RelevesSection() {
               Usuń zdjęcie {toRoman(i + 1)}
             </button>
           </legend>
-          <FieldRows fields={m.releves.fields} prefix={`releves.${i}`} />
+          {/* bez lewej kolumny etykiet: etykiety wierszy są nagłówkami grup nad polami */}
+          <div className="hf-stacked">
+            <FieldRows fields={m.releves.fields} prefix={`releves.${i}`} />
+          </div>
         </fieldset>
       ))}
       <button type="button" className="hf-secondary hf-add" onClick={() => append(emptyReleve(m))}>

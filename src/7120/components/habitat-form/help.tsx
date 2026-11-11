@@ -14,12 +14,27 @@ import { createPortal } from 'react-dom'
 
 export const HelpContext = createContext<{ showAll: boolean }>({ showAll: false })
 
+/** Akapity rozdzielone pustą linią; linie zaczynające się od „•” stają się listą punktowaną. */
 export function HelpText({ id, text }: { id?: string; text: string }) {
   return (
     <div id={id} className="hf-help" role="note">
-      {text.split(/\n{2,}/).map((para, i) => (
-        <p key={i}>{para}</p>
-      ))}
+      {text.split(/\n{2,}/).map((para, i) => {
+        const lines = para.split('\n')
+        const first = lines.findIndex((l) => /^\s*•/.test(l))
+        if (first === -1) return <p key={i}>{para}</p>
+        const intro = lines.slice(0, first).join('\n')
+        const items = lines.slice(first).filter((l) => l.trim())
+        return (
+          <div key={i} className="hf-help-block">
+            {intro && <p>{intro}</p>}
+            <ul>
+              {items.map((l, j) => (
+                <li key={j}>{l.replace(/^\s*•\s*/, '').replace(/[,;]$/, '')}</li>
+              ))}
+            </ul>
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -224,21 +239,50 @@ Podpowiedź pod spodem jest liczona z progów przewodnika GIOŚ, ale ostateczna 
 Dlaczego: oceny wskaźników składają się na ocenę parametrów, a parametry na ocenę ogólną stanowiska. Z ocen stanowisk powstaje ocena krajowa raportowana Komisji Europejskiej (art. 17 dyrektywy siedliskowej).`,
   speciesName: `Wpisz kilka liter nazwy naukowej albo polskiej (np. „sph fal”, „żurawina”) i wybierz z listy strzałkami i Enterem albo myszką. Gatunku spoza katalogu nie szukaj na siłę – wybierz „Dodaj własny”. Nazwy z katalogu są rozpoznawane przy liczeniu podpowiedzi ocen; własne nie są liczone.`,
   speciesCover: `Pokrycie w % całego transektu (rzut pionowy roślin na powierzchnię). Szacuj z dokładnością do dziesiątek procent, a dla małych wartości do pojedynczych procent. Dla „<1%” wpisz 0,5.`,
-  releveLayer: `Warstwa, w której rośnie gatunek: A – drzewa, B – krzewy i podrost drzew, C – rośliny zielne i krzewinki (także siewki drzew), D – mszaki i porosty naziemne. Podpowiada się po wyborze gatunku, ale ten sam gatunek może być w kilku warstwach (sosna w B, jej siewki w C).`,
-  releveAbundance: `Ilościowość w skali Braun-Blanqueta: r – pojedynczy osobnik; + – nieliczne, pokrycie znikome; 1 – liczne, ale pokrycie poniżej 5%; 2 – 5–25%; 3 – 25–50%; 4 – 50–75%; 5 – 75–100%. Pokrycie liczy się w obrębie zdjęcia (5×5 m), nie transektu.`,
+  releveLayer: `Warstwa, w której rośnie gatunek:
+• A – drzewa
+• B – krzewy i podrost drzew
+• C – rośliny zielne i krzewinki (także siewki drzew)
+• D – mszaki i porosty naziemne
+
+Podpowiada się po wyborze gatunku, ale ten sam gatunek może być w kilku warstwach (sosna w B, jej siewki w C).`,
+  releveAbundance: `Ilościowość w skali Braun-Blanqueta:
+• r – pojedynczy osobnik
+• + – nieliczne, pokrycie znikome
+• 1 – liczne, ale pokrycie poniżej 5%
+• 2 – 5–25%
+• 3 – 25–50%
+• 4 – 50–75%
+• 5 – 75–100%
+
+Pokrycie liczy się w obrębie zdjęcia (5×5 m), nie transektu.`,
   impactCode: `Kod oddziaływania z listy zagrożeń i oddziaływań stosowanej w monitoringu siedlisk (klasyfikacja Natura 2000), np. J02.01.02 – osuszanie terenów bagiennych. Lista podpowiada kody najczęstsze dla tego siedliska; znany kod sam uzupełni nazwę, gdy wyjdziesz z pola.
 
 Dlaczego: kody pozwalają zsumować dane z setek stanowisk w raporcie krajowym – opis tekstowy tego nie umożliwia.`,
   impactName: 'Nazwa oddziaływania zgodna z listą kodów. Dla znanego kodu uzupełnia się sama.',
-  influence: `Kierunek wpływu na siedlisko: „−” negatywny (pogarsza stan), „+” pozytywny (np. zastawki, odkrzaczanie), „0” neutralny. Działania ochronne też wpisuj – jako oddziaływania pozytywne.`,
-  intensity: `Siła oddziaływania: H – silna (wyraźnie kształtuje stan siedliska), M – średnia, L – słaba. W starszych kartach używano skali A/B/C (A = silna, C = słaba).
+  influence: `Kierunek wpływu na siedlisko:
+• „−” – negatywny (pogarsza stan)
+• „+” – pozytywny (np. zastawki, odkrzaczanie)
+• „0” – neutralny
+
+Działania ochronne też wpisuj – jako oddziaływania pozytywne.`,
+  intensity: `Siła oddziaływania:
+• H – silna (wyraźnie kształtuje stan siedliska)
+• M – średnia
+• L – słaba
+
+W starszych kartach używano skali A/B/C (A = silna, C = słaba).
 
 Dlaczego: pozwala odróżnić główne przyczyny złego stanu od tła i ustalić, od czego zacząć ochronę.`,
   impactDescription: `Konkretnie: co, gdzie, w jakiej skali i jak wpływa na siedlisko. „Rowy” to za mało. „Czynny rów ok. 1 m głębokości wzdłuż wschodniej granicy, woda odpływa, lustro wody na transekcie ponad 40 cm pod powierzchnią” – to jest opis.`,
   threatCode: `Kod przewidywanego oddziaływania z tej samej listy co oddziaływania. Zagrożenia to oddziaływania spodziewane w przyszłości (najbliższe lata) – także te, które już działają i będą działać dalej.`,
   threatDescription: `Dlaczego spodziewasz się tego zagrożenia i jak może zmienić stan siedliska, np. „sieć rowów będzie dalej drenować torfowisko, jeśli nie powstaną zastawki”.`,
   prospectsValue: `Opis perspektyw: co pomaga, co szkodzi, co się stanie bez działań ochronnych i co trzeba zrobić, żeby było lepiej. Szczegóły pod „?” przy nagłówku „Perspektywy ochrony”.`,
-  prospectsGrade: `FV – dobre perspektywy poprawy, aż do odtworzenia żywego torfowiska 7110; U1 – dobre perspektywy utrzymania stanu niepogorszonego; U2 – perspektywy złe, przetrwania siedliska nie da się zagwarantować; XX – nie da się ocenić.`,
+  prospectsGrade: `Ocena perspektyw ochrony:
+• FV – dobre perspektywy poprawy, aż do odtworzenia żywego torfowiska 7110
+• U1 – dobre perspektywy utrzymania stanu niepogorszonego
+• U2 – perspektywy złe, przetrwania siedliska nie da się zagwarantować
+• XX – nie da się ocenić`,
   overallComment: `Krótkie uzasadnienie oceny ogólnej: który parametr lub wskaźnik ją przesądził i dlaczego. Ocenę ogólną formularz liczy sam (najgorsza z ocen parametrów), tutaj ją objaśniasz.
 
 Dlaczego: przy złej ocenie najważniejsze jest wskazanie przyczyny – to od niej zależy, jakie działania ochronne zaproponować.`,

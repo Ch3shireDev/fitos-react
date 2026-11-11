@@ -3,6 +3,8 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  // GitHub Pages: strona leży pod /fitos-react/, więc zasoby muszą mieć ten prefiks
+  base: '/fitos-react/',
   plugins: [
     react(),
     // PWA: instalacja na telefonie i praca offline. Service worker zapisuje w pamięci podręcznej
@@ -10,7 +12,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
-      includeAssets: ['fitos-icon.svg', 'apple-touch-icon.png'],
+      includeAssets: ['fitos-icon.svg', 'apple-touch-icon.png', 'pwa-192.png', 'pwa-512.png', 'pwa-maskable-512.png'],
       manifest: {
         name: 'FITOS – karty obserwacji siedlisk',
         short_name: 'FITOS',
@@ -24,7 +26,8 @@ export default defineConfig({
         background_color: '#111315',
         icons: [
           { src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },
-          { src: 'pwa-512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'pwa-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: 'fitos-icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
           { src: 'pwa-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },

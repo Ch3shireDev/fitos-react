@@ -80,6 +80,7 @@ Formularz odwzorowuje kartę docx jak najwierniej, żeby osoba wypełniająca ni
   - Ocena wskaźnika i ocena parametru są w **jednej** kolumnie (15rem), obok siebie: „WSKAŹNIKA” (select, „Przyjmij X”, ostrzeżenie) i „PARAMETRU” (odznaka). Ocena parametru powtarza się przy każdym wskaźniku z dopiskiem „wynika z ocen wszystkich wskaźników parametru” (albo „wynika z oceny wskaźnika”, gdy wskaźnik jest jeden). Dwie osobne wąskie kolumny były nieczytelne.
 - **Pola pokrycia gatunków** trzymają wpisany tekst lokalnie i nie nadpisują go wartością z formularza przy każdym renderze – dzięki temu da się skasować całą liczbę i wpisać nową. Reset/wczytanie karty przemontowuje formularz, więc tekst bierze się z danych na nowo.
 - **Wiersz „Dodaj gatunek”** (zdjęcia fitosocjologiczne) zajmuje całą szerokość komórki.
+- **Bez lewej kolumny etykiet** w „Inne informacje” i „Zdjęcia fitosocjologiczne”: etykiety wierszy („Położenie zdjęcia”, „Powierzchnia, nachylenie, ekspozycja”, „Inne wartości przyrodnicze”, „Wykonywane zabiegi…” itd.) są szarymi nagłówkami grup nad polami, a pola zajmują całą szerokość (klasa `hf-stacked`). Sekcja „Stanowisko” zostaje z kolumną etykiet jak w karcie GIOŚ.
 - **Telefon:** tabele zamieniają się w karty z etykietą przy każdej komórce.
   - Poniżej 48rem zakładki układają się w siatkę dwóch równych kolumn na całą szerokość. Nieparzysta ostatnia („Całość”) zajmuje cały wiersz. Wybrana zakładka ma zielone tło.
   - Poniżej 30rem przyciski paska narzędzi („Wczytaj z pliku”, przykłady, „Wyczyść”) też zajmują całą szerokość.
@@ -200,6 +201,8 @@ Każde pole ma przycisk „?”, który otwiera dymek z szerokim wyjaśnieniem: 
 
 - Wyjaśnienia mają dwie warstwy: instrukcję dla początkującego i uzasadnienie metodyczne (akapit „Dlaczego: …”) dla zaawansowanego, bez szukania w przewodniku.
 - Wyjaśnienia mają też nagłówki wskaźników, kolumn tabeli, oddziaływań, skal B-B i warstw.
+- Skale w wyjaśnieniach (siła i kierunek oddziaływania, ilościowość B-B, warstwy, oceny FV/U1/U2/XX, perspektywy) są listami punktowanymi: w tekście wyjaśnienia każda linia zaczynająca się od „•” staje się punktem listy.
+- W tabelach oddziaływań i zagrożeń nagłówki kolumn i przycisk usuwania wiersza są wyrównane do góry, a etykieta z „?” nie zawija się pod spód.
 - Przełącznik „Rozwiń wszystkie wyjaśnienia (tryb dla początkujących)” pokazuje wszystkie wyjaśnienia naraz jako panele w treści, pod etykietą/polem. Pole z takim panelem zajmuje cały wiersz grupy. Wyjaśnienia kolumn list gatunków („Gatunek”, „Pokrycie”, „Warstwa”, „Ilościowość”) idą pod całym wierszem nagłówków, na pełnej szerokości – w kolumnie siatki tekst łamał się po jednym słowie.
 - Test pilnuje, żeby każde pole metodyki miało wyjaśnienie dłuższe niż 60 znaków.
 

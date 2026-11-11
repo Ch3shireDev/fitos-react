@@ -213,7 +213,7 @@ textarea.hf-control { resize: vertical; }
 .hf-status th, .hf-status td, .hf-grid-table th, .hf-grid-table td {
   border: 1px solid var(--hf-border); padding: 0.4rem 0.5rem; vertical-align: top; text-align: left;
 }
-.hf-status thead th, .hf-grid-table thead th { background: var(--hf-cell); text-align: center; font-weight: 700; vertical-align: middle; }
+.hf-status thead th, .hf-grid-table thead th { background: var(--hf-cell); text-align: center; font-weight: 700; vertical-align: top; }
 .hf-status thead .hf-label-row, .hf-grid-table thead .hf-label-row { justify-content: center; }
 .hf-th-small { font-size: 0.82em; }
 .hf-col-param { width: 9rem; }
@@ -257,7 +257,7 @@ textarea.hf-control { resize: vertical; }
 .hf-c-code { width: 8.5rem; }
 .hf-c-narrow { width: 5.5rem; }
 .hf-c-desc { width: 40%; }
-.hf-c-actions { width: 3rem; text-align: center !important; vertical-align: middle !important; }
+.hf-c-actions { width: 3rem; text-align: center !important; vertical-align: top !important; }
 
 /* ---------- listy gatunków ---------- */
 .hf-list { min-width: 0; }
@@ -450,3 +450,21 @@ textarea.hf-control { resize: vertical; }
 .hf-group-title { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem 1rem; flex-wrap: wrap; }
 .hf-group-grade { display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 400; font-size: 0.9em; }
 .hf-group-head > .hf-help { margin-top: 0.4rem; font-weight: 400; }
+
+/* listy punktowane w wyjaśnieniach (skale: siła, wpływ, B-B, warstwy…) */
+.hf-help-block { margin: 0 0 0.5rem; }
+.hf-help-block:last-child { margin-bottom: 0; }
+.hf-help-block > p { margin: 0 0 0.25rem; }
+.hf-help ul { margin: 0; padding-left: 1.25rem; }
+.hf-help li { margin: 0.1rem 0; }
+/* nagłówek kolumny: etykieta i „?” w jednej linii, nie zawijane pod spód */
+.hf-grid-table thead .hf-label-row { flex-wrap: nowrap; white-space: nowrap; }
+
+/* zdjęcie fitosocjologiczne: zamiast lewej kolumny etykiet – nagłówki grup nad polami, pola na całą szerokość */
+.hf-stacked .hf-f-row { display: block; padding: 0; }
+.hf-stacked .hf-f-row > .hf-f-head {
+  display: flex; justify-content: flex-start; align-items: center; gap: 0.4rem; min-height: 0;
+  margin: 0; padding: 0.4rem 0.75rem; background: var(--hf-cell); border-right: none; border-bottom: 1px solid var(--hf-border);
+}
+.hf-stacked .hf-f-row > .hf-f-head .hf-f-label { font-weight: 600; }
+.hf-stacked .hf-f-row > .hf-f-body { padding: 0.5rem 0.6rem; }
