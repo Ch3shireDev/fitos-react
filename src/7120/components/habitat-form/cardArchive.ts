@@ -3,7 +3,7 @@
 import { strFromU8, strToU8, unzipSync, zipSync, type Zippable } from 'fflate'
 import { assessCard, emptyCardValues } from '../../habitats/assessment'
 import { isoToPl } from '../../habitats/dates'
-import type { CardValues, FieldDef, InputValues, Methodology, PhotoRow } from '../../habitats/types'
+import { allOtherFields, type CardValues, type FieldDef, type InputValues, type Methodology, type PhotoRow } from '../../habitats/types'
 
 export const CARD_FORMAT = 'fitos-karta'
 export const CARD_VERSION = 1
@@ -59,7 +59,7 @@ function photoSlots(m: Methodology, v: CardValues): [InputValues, string, string
   const photos = (fields: FieldDef[]) => fields.filter((f) => f.kind === 'photos').map((f) => f.name)
   return [
     ...photos(m.siteFields).map((n) => [v.site, n, n] as [InputValues, string, string]),
-    ...photos(m.otherFields).map((n) => [v.other, n, n] as [InputValues, string, string]),
+    ...photos(allOtherFields(m)).map((n) => [v.other, n, n] as [InputValues, string, string]),
     ...(v.releves ?? []).flatMap((r, i) =>
       photos(m.releves.fields).map((n) => [r, n, `zdjecie-fito-${i + 1}-${n}`] as [InputValues, string, string]),
     ),

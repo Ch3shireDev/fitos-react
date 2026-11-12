@@ -1,6 +1,6 @@
 // Schemat zod generowany z definicji metodyki. Jedna metodyka = jeden schemat, zero ręcznego klepania.
 import { z } from 'zod'
-import { BRAUN_BLANQUET, GRADES, LAYERS, type FieldDef, type Methodology } from './types'
+import { BRAUN_BLANQUET, GRADES, LAYERS, allOtherFields, type FieldDef, type Methodology } from './types'
 import { isIsoDate } from './dates'
 
 const REQUIRED = 'To pole jest wymagane'
@@ -45,6 +45,8 @@ export function fieldSchema(f: FieldDef): z.ZodType {
         : z.array(speciesRowSchema)
     case 'releve-species':
       return z.array(releveSpeciesRowSchema)
+    case 'table':
+      return f.required ? z.array(fieldsSchema(f.columns)).min(1, 'Dodaj przynajmniej jeden wiersz') : z.array(fieldsSchema(f.columns))
     case 'date': {
       const msg = 'Podaj datę w formacie DD.MM.RRRR, np. 14.07.2025'
       return f.required
@@ -102,7 +104,7 @@ export function buildCardSchema(m: Methodology) {
     }),
     impacts: z.array(impactSchema),
     threats: z.array(threatSchema),
-    other: fieldsSchema(m.otherFields),
+    other: fieldsSchema(allOtherFields(m)),
     overallComment: z.string().optional(),
   })
 }

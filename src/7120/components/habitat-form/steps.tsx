@@ -1,6 +1,6 @@
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form'
 import { assessCard, emptyReleve, habitatCode } from '../../habitats/assessment'
-import type { CardValues } from '../../habitats/types'
+import type { CardValues, ExtraStep } from '../../habitats/types'
 import { useMethodology } from './context'
 import { ErrorText, FieldRows, GradeBadge, IMPACT_CODES_ID, InputBox, p, toId, useFieldError } from './fields'
 import { GENERIC_HELP, useHelpToggle } from './help'
@@ -43,6 +43,18 @@ export function OtherSection() {
     <div className="hf-stacked">
       <FieldRows fields={m.otherFields} prefix="other" />
     </div>
+  )
+}
+
+/** Dodatkowa zakładka metodyki (pola w `values.other`). */
+export function ExtraSection({ step }: { step: ExtraStep }) {
+  return (
+    <>
+      {step.intro && <p className="hf-intro">{step.intro}</p>}
+      <div className="hf-stacked">
+        <FieldRows fields={step.fields} prefix="other" />
+      </div>
+    </>
   )
 }
 

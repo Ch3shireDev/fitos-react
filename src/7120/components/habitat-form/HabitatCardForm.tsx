@@ -10,7 +10,7 @@ import { MethodologyContext } from './context'
 import { deleteDraft, draftKey, loadDraft, saveDraft as storeDraft } from './draftStore'
 import { IMPACT_CODES_ID } from './fields'
 import { HelpContext } from './help'
-import { ImpactsSection, OtherSection, RelevesSection, SavedResult, SiteSection, ThreatsSection } from './steps'
+import { ExtraSection, ImpactsSection, OtherSection, RelevesSection, SavedResult, SiteSection, ThreatsSection } from './steps'
 import { StatusTable } from './StatusTable'
 import './habitat-form.css'
 
@@ -20,9 +20,19 @@ export interface CardExample {
   values: CardValues
 }
 
+/** Dodatkowy eksport karty (np. arkusz .xlsx w układzie jednego RDOŚ). Ładowany leniwie po kliknięciu. */
+export interface CardExport {
+  id: string
+  /** Napis na przycisku, np. „Pobierz kartę (.xlsx)”. */
+  label: string
+  title?: string
+  build: (m: Methodology, values: CardValues) => Promise<{ blob: Blob; fileName: string }>
+}
+
 interface Props {
   methodology: Methodology
   examples?: CardExample[]
+  exports?: CardExport[]
   onSubmit?: (values: CardValues) => void
 }
 
@@ -40,6 +50,23 @@ interface FormStep {
 // Sekcje 1:1 z kartą obserwacji (kolejność i nazwy jak w karcie GIOŚ). Zdjęcia fitosocjologiczne
 // są w przewodniku, ale nie w karcie docx – dlatego na końcu.
 function buildSteps(m: Methodology): FormStep[] {
+  const steps = baseSteps(m)
+  // dodatkowe zakładki metodyki (np. ocena referencyjna PZO) – domyślnie przed „Innymi informacjami”
+  for (const x of m.extraSteps ?? []) {
+    const step: FormStep = {
+      id: x.id,
+      tab: x.tab,
+      title: x.title,
+      fields: x.fields.map((f) => `other.${f.name}`),
+      render: () => <ExtraSection step={x} />,
+    }
+    const at = x.after ? steps.findIndex((s) => s.id === x.after) + 1 : steps.findIndex((s) => s.id === 'other')
+    steps.splice(at > 0 ? at : steps.length, 0, step)
+  }
+  return steps
+}
+
+function baseSteps(m: Methodology): FormStep[] {
   return [
     {
       id: 'site',
@@ -73,7 +100,7 @@ function buildSteps(m: Methodology): FormStep[] {
       id: 'other',
       tab: 'Inne informacje',
       title: 'Inne informacje',
-      fields: ['other'],
+      fields: m.extraSteps?.length ? m.otherFields.map((f) => `other.${f.name}`) : ['other'],
       render: () => <OtherSection />,
     },
     {
@@ -98,7 +125,7 @@ function stepHasError(errors: FieldErrors<CardValues>, step: FormStep): boolean 
 const ALL = 'all' as const
 type TabId = number | typeof ALL
 
-export function HabitatCardForm({ methodology: m, examples = [], onSubmit }: Props) {
+export function HabitatCardForm({ methodology: m, examples = [], exports = [], onSubmit }: Props) {
   const schema = useMemo(() => buildCardSchema(m), [m])
   const defaults = useMemo(() => emptyCardValues(m), [m])
   const steps = useMemo(() => buildSteps(m), [m])
@@ -118,6 +145,7 @@ export function HabitatCardForm({ methodology: m, examples = [], onSubmit }: Pro
   /** Zmienia się przy każdym reset() – przemontowuje pola z lokalnym stanem tekstu (np. pokrycie). */
   const [resetKey, setResetKey] = useState(0)
   const [docxState, setDocxState] = useState<'idle' | 'busy' | 'error'>('idle')
+  const [exportState, setExportState] = useState<{ id: string; state: 'busy' | 'error' } | null>(null)
 
   const [fileMsg, setFileMsg] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null)
   const fileInput = useRef<HTMLInputElement>(null)
@@ -235,6 +263,17 @@ export function HabitatCardForm({ methodology: m, examples = [], onSubmit }: Pro
     } catch (e) {
       console.error(e)
       setDocxState('error')
+    }
+  }
+  const runExport = async (x: CardExport) => {
+    setExportState({ id: x.id, state: 'busy' })
+    try {
+      const { blob, fileName } = await x.build(m, form.getValues())
+      downloadBlob(blob, fileName)
+      setExportState(null)
+    } catch (e) {
+      console.error(e)
+      setExportState({ id: x.id, state: 'error' })
     }
   }
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
@@ -454,6 +493,18 @@ export function HabitatCardForm({ methodology: m, examples = [], onSubmit }: Pro
               >
                 {docxState === 'busy' ? 'Przygotowuję .docx…' : 'Pobierz kartę (.docx)'}
               </button>
+              {exports.map((x) => (
+                <button
+                  key={x.id}
+                  type="button"
+                  className="hf-secondary hf-export-btn"
+                  onClick={() => void runExport(x)}
+                  disabled={exportState?.id === x.id && exportState.state === 'busy'}
+                  title={x.title}
+                >
+                  {exportState?.id === x.id && exportState.state === 'busy' ? 'Przygotowuję plik…' : x.label}
+                </button>
+              ))}
               <button type="submit" className="hf-primary" title="Pobiera plik .zip: dane karty (karta.json) i zdjęcia (folder zdjecia/). Można go potem wczytać przyciskiem „Wczytaj z pliku”.">
                 Zapisz kartę (.zip)
               </button>
@@ -461,6 +512,11 @@ export function HabitatCardForm({ methodology: m, examples = [], onSubmit }: Pro
             {docxState === 'error' && (
               <p className="hf-error" role="alert">
                 Nie udało się przygotować pliku .docx. Spróbuj ponownie; jeśli to nie pomoże, usuń zdjęcia w nietypowym formacie.
+              </p>
+            )}
+            {exportState?.state === 'error' && (
+              <p className="hf-error" role="alert">
+                Nie udało się przygotować pliku ({exports.find((x) => x.id === exportState.id)?.label}). Spróbuj ponownie.
               </p>
             )}
           </form>

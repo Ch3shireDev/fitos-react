@@ -49,9 +49,22 @@ export type FieldDef =
   | (BaseField & { kind: 'species' })
   | (BaseField & { kind: 'releve-species' })
   | (BaseField & { kind: 'photos' })
+  | (BaseField & {
+      kind: 'table'
+      /** Kolumny jednego wiersza (proste pola: tekst, opis, liczba, wybór). */
+      columns: FieldDef[]
+      /** Etykieta przycisku dodawania, np. „Dodaj działanie”. */
+      addLabel?: string
+      /** Nazwa pojedynczego wiersza w nagłówku, np. „Działanie” → „Działanie 1”. */
+      rowLabel?: string
+    })
 
 /** Pola, których wartością jest lista wierszy (startują od []). */
-export const isListField = (f: FieldDef) => f.kind === 'species' || f.kind === 'releve-species' || f.kind === 'photos'
+export const isListField = (f: FieldDef) =>
+  f.kind === 'species' || f.kind === 'releve-species' || f.kind === 'photos' || f.kind === 'table'
+
+/** Wiersz pola „table” – klucze to nazwy kolumn. */
+export type TableRowValues = Record<string, unknown>
 
 /** Zdjęcie w dokumentacji fotograficznej. Plik trzymany jako data URL (po zmniejszeniu), więc trafia do zapisanego JSON-a. */
 export interface PhotoRow {
@@ -161,6 +174,22 @@ export interface ImpactCode {
   name: string
 }
 
+/**
+ * Dodatkowa zakładka formularza z polami zapisywanymi w `values.other` (obok „Innych informacji”).
+ * Np. ocena referencyjna i działania ochronne w standardzie PZO jednego z RDOŚ.
+ */
+export interface ExtraStep {
+  id: string
+  /** Krótka nazwa na zakładce. */
+  tab: string
+  /** Nagłówek sekcji. */
+  title: string
+  intro?: string
+  /** Po którym kroku wstawić zakładkę: site, status, impacts, threats, other. Domyślnie przed „Innymi informacjami”. */
+  after?: 'site' | 'status' | 'impacts' | 'threats' | 'other'
+  fields: FieldDef[]
+}
+
 export interface Methodology {
   code: string
   name: string
@@ -175,11 +204,16 @@ export interface Methodology {
   prospects: { description: string; help?: string; thresholds: Record<'FV' | 'U1' | 'U2', string> }
   impactCodes: ImpactCode[]
   otherFields: FieldDef[]
+  /** Dodatkowe zakładki; ich pola lądują w `values.other`, razem z `otherFields`. */
+  extraSteps?: ExtraStep[]
   /** Katalog gatunków do wyszukiwarki (nazwa naukowa + polska). */
   speciesCatalog?: CatalogOption[]
   /** Krótka etykieta gatunku, np. „torfowiec kępkowy”; undefined = nieznany. */
   speciesInfo?: (name: string) => string | undefined
 }
+
+/** Wszystkie pola zapisywane w `values.other`: „Inne informacje” i dodatkowe zakładki. */
+export const allOtherFields = (m: Methodology): FieldDef[] => [...m.otherFields, ...(m.extraSteps ?? []).flatMap((s) => s.fields)]
 
 export interface IndicatorValue {
   inputs: InputValues

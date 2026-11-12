@@ -6,6 +6,8 @@ import type { Methodology } from '../7120/habitats/types'
 import { methodology7120 } from '../7120/habitats/7120/methodology'
 import { methodology91D0 } from '../91D0/habitats/methodology'
 import { methodology40A0 } from '../40A0/habitats/methodology'
+import { methodology6410 } from '../6410/habitats/methodology'
+import { methodology6510 } from '../6510/habitats/methodology'
 import { methodology65XX } from '../65XX/habitats/methodology'
 import { methodology91E0 } from '../91E0/habitats/methodology'
 import { methodology91F0 } from '../91F0/habitats/methodology'
@@ -28,9 +30,24 @@ const HABITATS: HabitatEntry[] = [
     blurb: 'Niskie zarośla wisienki stepowej w murawach kserotermicznych i naskalne zarośla irgi zwyczajnej w Sudetach.',
   },
   {
+    m: methodology6410,
+    title: 'Zmiennowilgotne łąki trzęślicowe',
+    blurb: 'Późno koszone łąki z trzęślicą, kosaćcem syberyjskim i olszewnikiem (zw. Molinion). Karta w układzie RDOŚ, z eksportem do Excela.',
+  },
+  {
+    m: methodology6510,
+    title: 'Ekstensywnie użytkowane niżowe łąki świeże',
+    blurb: 'Kośne łąki rajgrasowe i wiechlinowo-kostrzewowe (zw. Arrhenatherion). Karta w układzie RDOŚ, z eksportem do Excela.',
+  },
+  {
     m: methodology65XX,
     title: 'Eutroficzne łąki wilgotne',
     blurb: 'Bujne, koszone łąki z ostrożeniami, kniecią i pępawą błotną (zw. Calthion) w dolinach i na wysiękach.',
+  },
+  {
+    m: methodology7120,
+    title: 'Torfowiska wysokie zdegradowane',
+    blurb: 'Torfowiska przekształcone przez odwodnienie i eksploatację, wciąż zdolne do regeneracji.',
   },
   {
     m: methodology91D0,
@@ -57,17 +74,12 @@ const HABITATS: HabitatEntry[] = [
     title: 'Jodłowy bór świętokrzyski',
     blurb: 'Wyżynne bory z dominacją jodły w Górach Świętokrzyskich, na Roztoczu i w Kotlinie Sandomierskiej.',
   },
-  {
-    m: methodology7120,
-    title: 'Torfowiska wysokie zdegradowane',
-    blurb: 'Torfowiska przekształcone przez odwodnienie i eksploatację, wciąż zdolne do regeneracji.',
-  },
 ]
 
 const FEATURES = [
   'układ i pola jak w oficjalnej karcie obserwacji GIOŚ',
   'podpowiedzi ocen FV / U1 / U2 z progów przewodnika metodycznego',
-  'zapis do .zip (z fotografiami) i eksport karty do Worda',
+  'zapis do .zip (z fotografiami) i eksport karty do Worda; łąki 6410 i 6510 także do Excela w układzie RDOŚ',
   'działa offline, dane zostają tylko na tym urządzeniu',
 ]
 

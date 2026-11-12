@@ -183,6 +183,14 @@ export function FieldInput({ field, path, layout = 'row' }: { field: FieldDef; p
   const error = useFieldError(path)
   const id = toId(path)
 
+  if (field.kind === 'table') {
+    return (
+      <FieldShell layout={layout} id={id} label={field.label} required={field.required} help={field.help} isStatic wide>
+        <TableField field={field} path={path} labelId={`${id}-label`} />
+      </FieldShell>
+    )
+  }
+
   if (field.kind === 'species' || field.kind === 'releve-species' || field.kind === 'photos') {
     return (
       <FieldShell layout={layout} id={id} label={field.label} required={field.required} help={field.help} isStatic wide>
@@ -320,6 +328,43 @@ function GroupRow({ label, id, cols, children }: { label: string; id: string; co
         {children}
       </div>
     </FieldShell>
+  )
+}
+
+// ---------- tabela wierszy (np. działania ochronne) ----------
+
+/** Wiersze z kilkoma polami każdy. Każdy wiersz to osobny blok z polami i przyciskiem „Usuń”. */
+function TableField({ field, path, labelId }: { field: Extract<FieldDef, { kind: 'table' }>; path: string; labelId: string }) {
+  const { control } = useFormContext<CardValues>()
+  const { fields, append, remove } = useFieldArray({
+    control: control as unknown as Control<{ list: Record<string, unknown>[] }>,
+    name: path as 'list',
+  })
+  const error = useFieldError(path)
+  const id = toId(path)
+  const rowLabel = field.rowLabel ?? 'Wiersz'
+  const empty = () =>
+    Object.fromEntries(field.columns.map((c) => [c.name, c.defaultValue ?? (c.kind === 'number' ? undefined : '')]))
+  return (
+    <div className="hf-list hf-table-field" role="group" aria-labelledby={labelId}>
+      {fields.map((row, i) => (
+        <fieldset key={row.id} className="hf-card-block hf-table-row">
+          <legend className="hf-bar hf-bar-sub">
+            {rowLabel} {i + 1}
+            <button type="button" className="hf-bar-action" onClick={() => remove(i)}>
+              Usuń: {rowLabel.toLowerCase()} {i + 1}
+            </button>
+          </legend>
+          <div className="hf-stacked">
+            <FieldRows fields={field.columns} prefix={`${path}.${i}`} />
+          </div>
+        </fieldset>
+      ))}
+      <button type="button" className="hf-secondary hf-add" onClick={() => append(empty())}>
+        + {field.addLabel ?? 'Dodaj wiersz'}
+      </button>
+      <ErrorText id={`${id}-error`} message={error} />
+    </div>
   )
 }
 

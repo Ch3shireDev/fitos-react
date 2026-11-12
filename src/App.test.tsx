@@ -18,7 +18,7 @@ it('strona główna: opis, karty z kodem i instrukcja instalacji', async () => {
     expect(screen.getByRole('link', { name: /7120 – Torfowiska wysokie zdegradowane/ })).toHaveAttribute('href', '/7120')
     expect(screen.getByText('*91D0')).toBeInTheDocument()
     const hrefs = screen.getAllByRole('link').map((a) => a.getAttribute('href')).filter((h) => /^\/\w{4}$/.test(h ?? ''))
-    expect(hrefs.sort()).toEqual(['/40A0', '/65XX', '/7120', '/91D0', '/91E0', '/91F0', '/91I0', '/91P0'])
+    expect(hrefs.sort()).toEqual(['/40A0', '/6410', '/6510', '/65XX', '/7120', '/91D0', '/91E0', '/91F0', '/91I0', '/91P0'])
     expect(screen.getByRole('heading', { name: 'Dodaj FITOS do ekranu głównego' })).toBeInTheDocument()
     expect(screen.getAllByRole('listitem').some((li) => /ekran|instalac|Zainstaluj/i.test(li.textContent ?? ''))).toBe(true)
 })
@@ -75,4 +75,20 @@ it('przechodzi ze strony głównej do karty 91P0', async () => {
     expect(link).toHaveAttribute('href', '/91P0')
     await userEvent.click(link)
     expect(screen.getByRole('heading', { name: 'Karta 91P0' })).toBeInTheDocument()
+})
+
+it('przechodzi ze strony głównej do karty 6410', async () => {
+    render(<MemoryRouter><App /></MemoryRouter>)
+    const link = screen.getByRole('link', { name: /6410 – Zmiennowilgotne łąki trzęślicowe/ })
+    expect(link).toHaveAttribute('href', '/6410')
+    await userEvent.click(link)
+    expect(screen.getByRole('heading', { name: 'Karta 6410' })).toBeInTheDocument()
+})
+
+it('przechodzi ze strony głównej do karty 6510', async () => {
+    render(<MemoryRouter><App /></MemoryRouter>)
+    const link = screen.getByRole('link', { name: /6510 – Ekstensywnie użytkowane niżowe łąki świeże/ })
+    expect(link).toHaveAttribute('href', '/6510')
+    await userEvent.click(link)
+    expect(screen.getByRole('heading', { name: 'Karta 6510' })).toBeInTheDocument()
 })

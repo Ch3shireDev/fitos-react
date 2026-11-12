@@ -21,6 +21,7 @@ import {
 import { assessCard, describeSpecies, habitatCode, isCardinal, isExcluded, num, speciesRows } from '../../habitats/assessment'
 import { isoToPl } from '../../habitats/dates'
 import {
+  allOtherFields,
   LAYERS,
   type CardValues,
   type FieldDef,
@@ -150,6 +151,12 @@ export function formatFieldValue(f: FieldDef, v: unknown): string {
       return releveSpeciesText(v as ReleveSpeciesRow[])
     case 'photos':
       return (v as PhotoRow[]).map((r) => r.caption).join('\n')
+    case 'table':
+      return (v as Record<string, unknown>[])
+        .map((row, i) =>
+          [`${f.rowLabel ?? 'Wiersz'} ${i + 1}`, ...f.columns.map((c) => [c.label, formatFieldValue(c, row[c.name])] as const).filter(([, t]) => t !== '').map(([l, t]) => `${l}: ${t}`)].join('\n'),
+        )
+        .join('\n\n')
     default:
       return String(v)
   }
@@ -402,7 +409,7 @@ const OTHER = [2802, 6549]
 async function otherSection(m: Methodology, v: CardValues, latin: RegExp | null): Promise<TableRow[]> {
   const rows: TableRow[] = [bar('Inne informacje', FILL.bar)]
   const values = v.other ?? {}
-  for (const f of m.otherFields) {
+  for (const f of allOtherFields(m)) {
     const content =
       f.kind === 'photos'
         ? await photoParagraphs((values[f.name] as PhotoRow[] | undefined) ?? [], latin)

@@ -469,3 +469,4 @@ textarea.hf-control { resize: vertical; }
 }
 .hf-stacked .hf-f-row > .hf-f-head .hf-f-label { font-weight: 600; }
 .hf-stacked .hf-f-row > .hf-f-body { padding: 0.5rem 0.6rem; }
+.hf-table-field > .hf-card-block { border: 1px solid var(--hf-border); margin: 0 0 0.5rem; }

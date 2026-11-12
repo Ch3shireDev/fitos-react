@@ -9,7 +9,7 @@ import type {
   Methodology,
   SpeciesRow,
 } from './types'
-import { isListField } from './types'
+import { allOtherFields, isListField } from './types'
 
 /** Bezpiecznie wyciąga liczbę z wartości formularza. */
 export function num(value: unknown): number | undefined {
@@ -189,7 +189,7 @@ export function emptyCardValues(m: Methodology): CardValues {
     prospects: { value: '', grade: '' },
     impacts: [],
     threats: [],
-    other: emptyFields(m.otherFields),
+    other: emptyFields(allOtherFields(m)),
     overallComment: '',
   }
 }
