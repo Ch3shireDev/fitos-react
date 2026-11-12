@@ -9,6 +9,7 @@ import {Card91E0} from "./91E0/Card91E0.tsx";
 import {Card91F0} from "./91F0/Card91F0.tsx";
 import {Card91I0} from "./91I0/Card91I0.tsx";
 import {Card91P0} from "./91P0/Card91P0.tsx";
+import {Card91Q0} from "./91Q0/Card91Q0.tsx";
 import {Home} from "./home/Home.tsx";
 
 export default function App() {
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="/91F0" element={<Card91F0 />} />
         <Route path="/91I0" element={<Card91I0 />} />
         <Route path="/91P0" element={<Card91P0 />} />
+        <Route path="/91Q0" element={<Card91Q0 />} />
         <Route path="*" element={<p>Nie ma takiego siedliska.</p>} />
       </Routes>
   )

@@ -13,6 +13,7 @@ import { methodology91E0 } from '../91E0/habitats/methodology'
 import { methodology91F0 } from '../91F0/habitats/methodology'
 import { methodology91I0 } from '../91I0/habitats/methodology'
 import { methodology91P0 } from '../91P0/habitats/methodology'
+import { methodology91Q0 } from '../91Q0/habitats/methodology'
 import { draftKey, loadDraft } from '../7120/components/habitat-form/draftStore'
 import { detectPlatform, useInstallPrompt, type Platform } from './installPrompt'
 import './home.css'
@@ -73,6 +74,11 @@ const HABITATS: HabitatEntry[] = [
     m: methodology91P0,
     title: 'Jodłowy bór świętokrzyski',
     blurb: 'Wyżynne bory z dominacją jodły w Górach Świętokrzyskich, na Roztoczu i w Kotlinie Sandomierskiej.',
+  },
+  {
+    m: methodology91Q0,
+    title: 'Górskie reliktowe laski sosnowe',
+    blurb: 'Luźne laski karłowatych sosen na wapiennych i dolomitowych skałach Pienin i Tatr, z bogatym runem murawowym.',
   },
 ]
 
