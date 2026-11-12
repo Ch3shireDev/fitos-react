@@ -1,4 +1,5 @@
-import {Route, Routes} from 'react-router'
+import {useLayoutEffect} from 'react'
+import {Route, Routes, useLocation} from 'react-router'
 import {Card91D0} from "./91D0/Card91D0.tsx";
 import {Card7120} from "./7120/Card7120.tsx";
 import {Card40A0} from "./40A0/Card40A0.tsx";
@@ -12,8 +13,21 @@ import {Card91P0} from "./91P0/Card91P0.tsx";
 import {Card91Q0} from "./91Q0/Card91Q0.tsx";
 import {Home} from "./home/Home.tsx";
 
+/** Po przejściu na inną stronę (np. kliknięcie kafelka karty) przewija okno na samą górę. */
+function ScrollToTop() {
+  const {pathname} = useLocation()
+  useLayoutEffect(() => {
+    // jsdom nie implementuje scrollTo – w testach to tylko szum w konsoli
+    if (navigator.userAgent.includes('jsdom')) return
+    window.scrollTo({top: 0, left: 0, behavior: 'instant'})
+  }, [pathname])
+  return null
+}
+
 export default function App() {
   return (
+    <>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/40A0" element={<Card40A0 />} />
@@ -29,6 +43,7 @@ export default function App() {
         <Route path="/91Q0" element={<Card91Q0 />} />
         <Route path="*" element={<p>Nie ma takiego siedliska.</p>} />
       </Routes>
+    </>
   )
 }
 
