@@ -1,32 +1,42 @@
-# React + TypeScript + Vite
+# FITOS – karty obserwacji siedlisk przyrodniczych
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Aplikacja webowa (PWA) do wypełniania kart obserwacji siedlisk Natura 2000 w terenie, według metodyki
+Państwowego Monitoringu Środowiska (GIOŚ). Formularze mają układ i pola oficjalnych kart, a oceny FV / U1 / U2
+są podpowiadane na podstawie progów z przewodników metodycznych. Ostateczna ocena zawsze należy do eksperta.
 
-Currently, two official plugins are available:
+## Obsługiwane siedliska
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+| Kod | Siedlisko |
+|-----|-----------|
+| 40A0 | Subkontynentalne zarośla okołopannońskie |
+| 6410 | Zmiennowilgotne łąki trzęślicowe (Molinion) |
+| 6510 | Ekstensywnie użytkowane niżowe i górskie łąki świeże (Arrhenatherion) |
+| 65XX | Eutroficzne łąki wilgotne |
+| 7120 | Torfowiska wysokie zdegradowane |
+| 91D0 | Bory i lasy bagienne |
+| 91E0 | Łęgi wierzbowe, topolowe, olszowe i jesionowe |
+| 91F0 | Łęgowe lasy dębowo-wiązowo-jesionowe |
+| 91I0 | Ciepłolubne dąbrowy |
+| 91P0 | Jodłowy bór świętokrzyski |
 
-## React Compiler
+## Możliwości
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- zdjęcia fitosocjologiczne, wskaźniki stanu ochrony, oddziaływania i zagrożenia, perspektywy ochrony;
+- automatyczne podpowiedzi ocen i ocena ogólna liczona wg wskaźników kardynalnych;
+- zapis karty do `.zip` (razem z fotografiami) i eksport do Worda (`.docx`);
+- karty 6410 i 6510 w wariancie RDOŚ we Wrocławiu: ocena referencyjna, działania ochronne
+  i eksport do Excela (`.xlsx`) w układzie arkusza RDOŚ;
+- działa offline, a dane zostają wyłącznie na urządzeniu użytkownika.
 
-## Expanding the Oxlint configuration
+## Uruchomienie
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```
+npm install
+npm run dev      # serwer deweloperski
+npm test         # testy (vitest)
+npm run build    # kompilacja i build produkcyjny
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Stos: React 19, TypeScript, Vite, react-hook-form + zod, vitest + Testing Library.
+
+Specyfikacje kart (źródła, progi, odstępstwa) leżą w ich katalogach jako `src/<kod>/specyfikacja-karty-<kod>.md`.
