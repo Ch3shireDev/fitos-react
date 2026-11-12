@@ -5,6 +5,12 @@ import { habitatCode } from '../7120/habitats/assessment'
 import type { Methodology } from '../7120/habitats/types'
 import { methodology7120 } from '../7120/habitats/7120/methodology'
 import { methodology91D0 } from '../91D0/habitats/methodology'
+import { methodology40A0 } from '../40A0/habitats/methodology'
+import { methodology65XX } from '../65XX/habitats/methodology'
+import { methodology91E0 } from '../91E0/habitats/methodology'
+import { methodology91F0 } from '../91F0/habitats/methodology'
+import { methodology91I0 } from '../91I0/habitats/methodology'
+import { methodology91P0 } from '../91P0/habitats/methodology'
 import { draftKey, loadDraft } from '../7120/components/habitat-form/draftStore'
 import { detectPlatform, useInstallPrompt, type Platform } from './installPrompt'
 import './home.css'
@@ -17,9 +23,39 @@ interface HabitatEntry {
 
 const HABITATS: HabitatEntry[] = [
   {
+    m: methodology40A0,
+    title: 'Subkontynentalne zarośla okołopannońskie',
+    blurb: 'Niskie zarośla wisienki stepowej w murawach kserotermicznych i naskalne zarośla irgi zwyczajnej w Sudetach.',
+  },
+  {
+    m: methodology65XX,
+    title: 'Eutroficzne łąki wilgotne',
+    blurb: 'Bujne, koszone łąki z ostrożeniami, kniecią i pępawą błotną (zw. Calthion) w dolinach i na wysiękach.',
+  },
+  {
     m: methodology91D0,
     title: 'Bory i lasy bagienne',
     blurb: 'Sosnowe bory bagienne, brzeziny, świerczyny i borealne lasy sosnowo-brzozowe na torfie.',
+  },
+  {
+    m: methodology91E0,
+    title: 'Łęgi wierzbowe, topolowe, olszowe i jesionowe',
+    blurb: 'Lasy nadrzeczne i źródliskowe: łęgi wierzbowe, topolowe, jesionowo-olszowe i górskie olszynki.',
+  },
+  {
+    m: methodology91F0,
+    title: 'Łęgowe lasy dębowo-wiązowo-jesionowe',
+    blurb: 'Łęgi wiązowo-jesionowe w dolinach rzek i wilgotnych zagłębieniach, zagrożone przesuszeniem i grądowieniem.',
+  },
+  {
+    m: methodology91I0,
+    title: 'Ciepłolubne dąbrowy',
+    blurb: 'Świetliste dąbrowy o luźnym drzewostanie i bogatym, ciepłolubnym runie, zagrożone grądowieniem.',
+  },
+  {
+    m: methodology91P0,
+    title: 'Jodłowy bór świętokrzyski',
+    blurb: 'Wyżynne bory z dominacją jodły w Górach Świętokrzyskich, na Roztoczu i w Kotlinie Sandomierskiej.',
   },
   {
     m: methodology7120,

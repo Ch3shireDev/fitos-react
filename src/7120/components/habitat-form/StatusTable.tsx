@@ -2,7 +2,7 @@
 // Wiersz-nagłówek „Parametr: …”, pod nim: Wskaźnik | Wartość lub opis | Ocena (wskaźnika i parametru obok siebie).
 import { useState, type ReactNode } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
-import { assessCard, isCardinal } from '../../habitats/assessment'
+import { assessCard, isCardinal, isExcluded } from '../../habitats/assessment'
 import type { CardValues, IndicatorDef, InputValues } from '../../habitats/types'
 import { useMethodology } from './context'
 import { ErrorText, FieldInput, GradeBadge, GradeSelect, p, toId, useFieldError } from './fields'
@@ -86,8 +86,10 @@ function IndicatorRow({
   const inputs = (useWatch({ control, name: p(`${base}.inputs`) }) ?? {}) as InputValues
   // wariant siedliska (np. 91D0) może zmieniać progi i kardynalność
   const site = (useWatch({ control, name: 'site' }) ?? {}) as InputValues
-  const ctx = { site }
-  const cardinal = isCardinal(ind, site)
+  const indicators = (useWatch({ control, name: 'indicators' }) ?? {}) as CardValues['indicators']
+  const ctx = { site, indicators }
+  const excluded = isExcluded(ind, site)
+  const cardinal = !excluded && isCardinal(ind, site)
   const value = (useWatch({ control, name: p(`${base}.value`) }) ?? '') as string
   const [open, setOpen] = useState(false)
   const { button: helpButton, panel: helpPanel } = useHelpToggle(ind.help, ind.label)
@@ -123,6 +125,7 @@ function IndicatorRow({
           {helpButton}
         </span>
         {cardinal && <span className="hf-sr-only"> (wskaźnik kardynalny)</span>}
+        {excluded && <span className="hf-ind-excluded">nie liczy się do oceny struktury przy tym podtypie</span>}
         {helpPanel}
       </th>
       <td className="hf-val" data-label="Wartość lub opis">

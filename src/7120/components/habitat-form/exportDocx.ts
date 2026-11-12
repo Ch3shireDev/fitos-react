@@ -18,7 +18,7 @@ import {
   WidthType,
   type IImageOptions,
 } from 'docx'
-import { assessCard, describeSpecies, habitatCode, isCardinal, num, speciesRows } from '../../habitats/assessment'
+import { assessCard, describeSpecies, habitatCode, isCardinal, isExcluded, num, speciesRows } from '../../habitats/assessment'
 import { isoToPl } from '../../habitats/dates'
 import {
   LAYERS,
@@ -312,7 +312,10 @@ function statusSection(m: Methodology, v: CardValues, latin: RegExp | null): Tab
     p.list.forEach((ind, idx) => {
       const iv = v.indicators?.[ind.id]
       const children = [
-        cell(ind.label, { width: S.ind, bold: isCardinal(ind, v.site) }),
+        cell(isExcluded(ind, v.site) ? `${ind.label} (pomocniczy, nie liczy się do oceny)` : ind.label, {
+          width: S.ind,
+          bold: isCardinal(ind, v.site) && !isExcluded(ind, v.site),
+        }),
         cell(iv?.value ?? '', { width: S.value }, latin),
         cell(gradeText(iv?.grade ?? ''), { width: S.grade, center: true }),
       ]

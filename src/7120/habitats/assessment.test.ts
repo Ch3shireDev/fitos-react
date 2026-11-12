@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest'
 import {
   aggregateOverall,
   aggregateStructure,
+  assessCard,
+  emptyCardValues,
+  isExcluded,
   describeSpecies,
   gradeByLowerBounds,
   gradeByUpperBounds,
@@ -9,6 +12,7 @@ import {
   num,
   parseNumberInput,
 } from './assessment'
+import type { GradeOrEmpty, Methodology } from './types'
 
 describe('liczby z formularza', () => {
   it('num łyka polski przecinek i odrzuca śmieci', () => {
@@ -88,4 +92,52 @@ it('describeSpecies składa opis jak w karcie', () => {
       { name: '  ' },
     ]),
   ).toBe('Eriophorum vaginatum 40%, Sphagnum fallax <1%')
+})
+
+describe('wskaźniki pominięte w ocenie struktury (excluded)', () => {
+  const m = {
+    code: 'TEST',
+    name: 'test',
+    source: '',
+    siteFields: [],
+    releves: { defaultCount: 0, intro: '', fields: [] },
+    prospects: { description: '', thresholds: { FV: '', U1: '', U2: '' } },
+    impactCodes: [],
+    otherFields: [],
+    indicators: [
+      { id: 'a', label: 'A', parameter: 'area', description: '', thresholds: { FV: '', U1: '', U2: '' }, inputs: [] },
+      { id: 'k', label: 'K', parameter: 'structure', cardinal: true, description: '', thresholds: { FV: '', U1: '', U2: '' }, inputs: [] },
+      {
+        id: 'x',
+        label: 'X',
+        parameter: 'structure',
+        cardinal: true,
+        excluded: (ctx: { site: Record<string, unknown> }) => ctx.site.sub === 'mountain',
+        description: '',
+        thresholds: { FV: '', U1: '', U2: '' },
+        inputs: [],
+      },
+    ],
+  } satisfies Methodology
+  const card = (sub: string, x: GradeOrEmpty) => ({
+    ...emptyCardValues(m),
+    site: { sub },
+    indicators: { a: { inputs: {}, value: '', grade: 'FV' as const }, k: { inputs: {}, value: '', grade: 'FV' as const }, x: { inputs: {}, value: '', grade: x } },
+    prospects: { value: '', grade: 'FV' as const },
+  })
+
+  it('isExcluded czyta funkcję kontekstu albo boolean', () => {
+    expect(isExcluded(m.indicators[2], { sub: 'mountain' })).toBe(true)
+    expect(isExcluded(m.indicators[2], { sub: 'lowland' })).toBe(false)
+    expect(isExcluded(m.indicators[1], undefined)).toBe(false)
+  })
+
+  it('pominięty kardynalny U2 nie psuje struktury, a brak jego oceny nie blokuje wyniku', () => {
+    expect(assessCard(m, card('lowland', 'U2')).structure).toBe('U2')
+    expect(assessCard(m, card('mountain', 'U2')).structure).toBe('FV')
+    const empty = assessCard(m, card('mountain', ''))
+    expect(empty.structure).toBe('FV')
+    expect(empty.missing).toEqual([])
+    expect(assessCard(m, card('lowland', '')).missing).toEqual(['X'])
+  })
 })

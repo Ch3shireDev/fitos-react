@@ -114,6 +114,8 @@ export type InputValues = Record<string, unknown>
  */
 export interface IndicatorContext {
   site: InputValues
+  /** Pomiary pozostałych wskaźników karty – gdy ocena jednego wskaźnika zależy od innego (91I0: gatunki charakterystyczne a ciepłolubne). */
+  indicators?: Record<string, IndicatorValue>
 }
 
 export interface IndicatorDef {
@@ -122,6 +124,11 @@ export interface IndicatorDef {
   parameter: 'area' | 'structure'
   /** Wskaźnik kardynalny – decyduje o ocenie „specyficznej struktury i funkcji”. Może zależeć od wariantu siedliska. */
   cardinal?: boolean | ((ctx: IndicatorContext) => boolean)
+  /**
+   * Wskaźnik badany i wpisywany do karty, ale pomijany w ocenie „specyficznej struktury i funkcji”
+   * (np. w 91E0 martwe drewno i wiek drzewostanu w podtypach górskich 91E0-6 i 91E0-7). Może zależeć od stanowiska.
+   */
+  excluded?: boolean | ((ctx: IndicatorContext) => boolean)
   /** Co opisuje wskaźnik (z tab. 1 przewodnika). */
   description: string
   /** Szerokie wyjaśnienie: co dokładnie zmierzyć, jak i dlaczego to ważne. */

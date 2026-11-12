@@ -133,13 +133,18 @@ export function isCardinal(ind: IndicatorDef, site: InputValues | undefined): bo
   return typeof ind.cardinal === 'function' ? ind.cardinal({ site: site ?? {} }) : Boolean(ind.cardinal)
 }
 
+/** Czy wskaźnik jest pominięty w ocenie struktury przy danym stanowisku (w 91E0 zależy od podtypu). */
+export function isExcluded(ind: IndicatorDef, site: InputValues | undefined): boolean {
+  return typeof ind.excluded === 'function' ? ind.excluded({ site: site ?? {} }) : Boolean(ind.excluded)
+}
+
 /** Kod siedliska tak, jak w karcie: priorytetowe z gwiazdką. */
 export const habitatCode = (m: Methodology) => `${m.priority ? '*' : ''}${m.code}`
 
 export function assessCard(m: Methodology, values: CardValues): Assessment {
   const gradeOf = (id: string): GradeOrEmpty => values.indicators?.[id]?.grade ?? ''
   const areaIndicators = m.indicators.filter((i) => i.parameter === 'area')
-  const structureIndicators = m.indicators.filter((i) => i.parameter === 'structure')
+  const structureIndicators = m.indicators.filter((i) => i.parameter === 'structure' && !isExcluded(i, values.site))
 
   const area = aggregateOverall(areaIndicators.map((i) => gradeOf(i.id)))
   const structure = aggregateStructure(
@@ -148,7 +153,9 @@ export function assessCard(m: Methodology, values: CardValues): Assessment {
   const prospects = values.prospects?.grade ?? ''
   const overall = aggregateOverall([area, structure, prospects])
 
-  const missing = m.indicators.filter((i) => gradeOf(i.id) === '').map((i) => i.label)
+  const missing = m.indicators
+    .filter((i) => gradeOf(i.id) === '' && !isExcluded(i, values.site))
+    .map((i) => i.label)
   if (prospects === '') missing.push('Perspektywy ochrony')
 
   return { area, structure, prospects, overall, missing }

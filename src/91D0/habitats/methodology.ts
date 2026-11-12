@@ -1,10 +1,28 @@
 // Metodyka *91D0 jako dane. Źródło: „Monitoring siedlisk przyrodniczych. Przewodnik metodyczny”
 // (GIOŚ, Biblioteka Monitoringu Środowiska), rozdział 91D0 Bory i lasy bagienne, tab. 1 i 2.
-// Wspólne typy, logika ocen i komponenty formularza leżą w src/7120 – tu są wyłącznie dane 91D0.
+// Wspólne typy, logika ocen i komponenty formularza leżą w src/7120, helpery leśne w src/forest – tu są wyłącznie dane 91D0.
 // Pola `help` to rozszerzone wyjaśnienia „co wpisać i dlaczego”.
 import { isIsoDate } from '../../7120/habitats/dates'
-import type { FieldDef, Grade, IndicatorContext, InputValues, Methodology, SelectOption } from '../../7120/habitats/types'
+import type { FieldDef, IndicatorContext, Methodology, SelectOption } from '../../7120/habitats/types'
 import { describeSpecies, num, speciesRows } from '../../7120/habitats/assessment'
+import {
+  AREA_TREND_OPTIONS,
+  DEAD_WOOD_COUNT_OPTIONS,
+  DISTORTION_OPTIONS,
+  DOMINANCE_OPTIONS,
+  KEY_SPECIES_OPTIONS,
+  LOGGING_OPTIONS,
+  REGENERATION_OPTIONS,
+  STAND_AGE_OPTIONS,
+  VERTICAL_OPTIONS,
+  byOption,
+  fmt,
+  labelOf,
+  listCover,
+  pct,
+  selectInput,
+  speciesInput,
+} from '../../forest'
 import { methodology7120 } from '../../7120/habitats/7120/methodology'
 import {
   GROUP_LABELS_91D0,
@@ -17,20 +35,6 @@ import {
   variantOf,
   type Variant91D0,
 } from './species'
-
-const pct = (name: string, label: string, extra: Partial<FieldDef> = {}): FieldDef =>
-  ({ kind: 'number', name, label, unit: '%', min: 0, max: 100, required: true, ...extra }) as FieldDef
-
-const fmt = (n: number | undefined) => (n === undefined ? '—' : `${String(n).replace('.', ',')}%`)
-
-const labelOf = (opts: SelectOption[], v: unknown) => opts.find((o) => o.value === v)?.label ?? ''
-
-/** Ocena z selecta: mapa wartość -> ocena. */
-const byOption = (map: Record<string, Grade>) => (i: InputValues) => map[String(i.choice)] ?? null
-
-const SPECIES_LIST_HELP = `Szukaj gatunku po kilku literach nazwy naukowej albo polskiej (np. „led pal”, „bagno”) i wybierz z listy. Każdy wybrany gatunek dostaje wiersz, w którym wpisujesz pokrycie. Gatunku spoza katalogu nie szukaj na siłę: wybierz „Dodaj własny”. Nazwy z katalogu są rozpoznawane przy liczeniu podpowiedzi oceny, własne nie.
-
-Pokrycie podawaj w procentach powierzchni transektu (rzut pionowy), dla „<1%” wpisz 0,5. Warstwę (A, B, C, D) możesz dopisać w opisie wskaźnika, tak jak w karcie papierowej („A: Betula pubescens 20%”).`
 
 const COORD_HELP = (where: string) =>
   `Współrzędne geograficzne ${where} osi transektu, odczytane z odbiornika GPS (układ WGS84). Trzymaj jeden format w całej karcie, najlepiej stopnie-minuty-sekundy z oznaczeniem N/E. Jeśli punkt ma oznaczenie w bazie (np. r32), dopisz je.
@@ -57,17 +61,9 @@ const variantName = (ctx?: IndicatorContext) => {
 
 // ---------- opcje selektów ----------
 
-const AREA_TREND: SelectOption[] = [
-  { value: 'stable', label: 'Nie zmniejsza się, nie jest antropogenicznie pofragmentowana' },
-  { value: 'slow', label: 'Powolny trend spadkowy lub antropogeniczna fragmentacja' },
-  { value: 'fast', label: 'Szybki trend spadkowy lub silna antropogeniczna fragmentacja' },
-]
+const AREA_TREND = AREA_TREND_OPTIONS
 
-const DOMINANCE: SelectOption[] = [
-  { value: 'natural', label: 'We wszystkich warstwach dominują gatunki naturalne, proporcje naturalne' },
-  { value: 'disturbed', label: 'Dominują gatunki naturalne, ale proporcje zachwiane' },
-  { value: 'foreign', label: 'W co najmniej jednej warstwie dominuje gatunek nietypowy' },
-]
+const DOMINANCE = DOMINANCE_OPTIONS
 
 const HYDRATION: SelectOption[] = [
   { value: 'proper', label: 'Właściwe, bagienne uwodnienie' },
@@ -75,28 +71,16 @@ const HYDRATION: SelectOption[] = [
   { value: 'strong', label: 'Silnie przesuszone' },
 ]
 
-const AGE: SelectOption[] = [
-  { value: 'old', label: 'Ponad 20% miąższości to drzewa starsze niż 100 lat' },
-  { value: 'mid', label: 'Poniżej 20% drzew >100 lat, ale ponad 50% drzew >50 lat' },
-  { value: 'young', label: 'Poniżej 20% drzew >100 lat i poniżej 50% drzew >50 lat' },
-]
+const AGE = STAND_AGE_OPTIONS
 
 const REGENERATING: SelectOption[] = [
   { value: 'no', label: 'Nie odnawiają się' },
   { value: 'yes', label: 'Odnawiają się (siewki, podrost)' },
 ]
 
-const DEAD_WOOD: SelectOption[] = [
-  { value: 'many', label: '>3 szt./ha' },
-  { value: 'some', label: '1–3 szt./ha' },
-  { value: 'few', label: '<1 szt./ha' },
-]
+const DEAD_WOOD = DEAD_WOOD_COUNT_OPTIONS
 
-const REGENERATION: SelectOption[] = [
-  { value: 'abundant', label: 'Tak, obfite' },
-  { value: 'single', label: 'Tak, lecz pojedyncze' },
-  { value: 'none', label: 'Brak' },
-]
+const REGENERATION = REGENERATION_OPTIONS
 
 const SPHAGNUM: SelectOption[] = [
   { value: 'dominant', label: 'Dominują w runie, normalne zróżnicowanie gatunkowe' },
@@ -110,66 +94,13 @@ const DWARF: SelectOption[] = [
   { value: 'none', label: 'Zupełnie brak' },
 ]
 
-const VERTICAL: SelectOption[] = [
-  { value: 'natural', label: 'Naturalna, zróżnicowana' },
-  { value: 'changed', label: 'Antropogenicznie zmieniona, lecz zróżnicowana' },
-  { value: 'uniform', label: 'Antropogenicznie ujednolicona' },
-]
+const VERTICAL = VERTICAL_OPTIONS
 
-const LOGGING: SelectOption[] = [
-  { value: 'none', label: 'Brak' },
-  { value: 'few', label: 'Nieliczne ślady, naruszone poniżej 1% powierzchni, liczby drzew itp.' },
-  { value: 'significant', label: 'Znaczące, obejmujące ponad 1% powierzchni, liczby drzew itp.' },
-]
+const LOGGING = LOGGING_OPTIONS
 
-const DISTORTIONS: SelectOption[] = [
-  { value: 'none', label: 'Brak' },
-  { value: 'minor', label: 'Występują, lecz mało znaczące' },
-  { value: 'strong', label: 'Silne' },
-]
+const DISTORTIONS = DISTORTION_OPTIONS
 
-const KEY_SPECIES: SelectOption[] = [
-  { value: 'all', label: 'Stan wszystkich takich gatunków właściwy (FV)' },
-  { value: 'someU1', label: 'Stan niektórych niezadowalający (U1)' },
-  { value: 'someU2', label: 'Stan niektórych zły (U2)' },
-  { value: 'noData', label: 'Brak danych' },
-]
-
-const GRADE_ORDER = ['FV', 'U1', 'U2', 'XX']
-
-/** Select oceny opisowej. Opcje idą w kolejności FV, U1, U2 (i ewentualnie XX) – pomoc mówi to wprost. */
-const selectInput = (label: string, options: SelectOption[], help?: string): FieldDef => ({
-  kind: 'select',
-  name: 'choice',
-  label,
-  options,
-  required: true,
-  help: [
-    help,
-    `Wybierz opis najbliższy temu, co widać na transekcie:\n${options.map((o, i) => `• ${o.label} – ${GRADE_ORDER[i]}`).join(',\n')}.`,
-    'Pełne wyjaśnienie wskaźnika jest pod „?” przy jego nazwie.',
-  ]
-    .filter(Boolean)
-    .join('\n\n'),
-})
-
-const speciesInput = (label: string, help: string, required = false): FieldDef => ({
-  kind: 'species',
-  name: 'species',
-  label,
-  required,
-  help: `${help}\n\n${SPECIES_LIST_HELP}`,
-})
-
-/** Suma pokrycia wszystkich gatunków z listy (każdy wiersz się liczy, niezależnie od katalogu). */
-function listCover(i: InputValues): { count: number; total?: number } {
-  const rows = speciesRows(i.species).filter((r) => r.name?.trim())
-  const covers = rows.map((r) => num(r.cover)).filter((v): v is number => v !== undefined)
-  return {
-    count: rows.length,
-    total: covers.length ? Math.round(covers.reduce((a, b) => a + b, 0) * 10) / 10 : rows.length ? undefined : 0,
-  }
-}
+const KEY_SPECIES = KEY_SPECIES_OPTIONS
 
 const isPineBog = (ctx?: IndicatorContext) => variantOf(ctx?.site) === 'pineBog'
 const noDwarfShrubs = (ctx?: IndicatorContext) => {
