@@ -125,7 +125,7 @@ function IndicatorRow({
           {helpButton}
         </span>
         {cardinal && <span className="hf-sr-only"> (wskaźnik kardynalny)</span>}
-        {excluded && <span className="hf-ind-excluded">nie liczy się do oceny struktury przy tym podtypie</span>}
+        {excluded && <span className="hf-ind-excluded">{ind.excludedNote ?? 'nie liczy się do oceny struktury przy tym podtypie'}</span>}
         {helpPanel}
       </th>
       <td className="hf-val" data-label="Wartość lub opis">

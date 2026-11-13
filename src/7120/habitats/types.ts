@@ -142,6 +142,8 @@ export interface IndicatorDef {
    * (np. w 91E0 martwe drewno i wiek drzewostanu w podtypach górskich 91E0-6 i 91E0-7). Może zależeć od stanowiska.
    */
   excluded?: boolean | ((ctx: IndicatorContext) => boolean)
+  /** Dopisek przy wskaźniku pominiętym w ocenie; domyślnie „nie liczy się do oceny struktury przy tym podtypie”. */
+  excludedNote?: string
   /** Co opisuje wskaźnik (z tab. 1 przewodnika). */
   description: string
   /** Szerokie wyjaśnienie: co dokładnie zmierzyć, jak i dlaczego to ważne. */
