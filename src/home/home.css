@@ -104,8 +104,8 @@ body:has(.home) { margin: 0; }
 
 .home-footer { margin-top: 2rem; color: var(--h-muted); font-size: 0.8rem; }
 .home-coffee {
-  display: block; width: fit-content; margin: 1.25rem auto 0; padding: 0.25rem 0.75rem; border-radius: 999px;
-  border: 1px solid var(--h-border); color: var(--h-muted); font-size: 0.8rem; text-decoration: none;
+  display: block; width: 235px; margin: 1.25rem auto 0; padding: 0.25rem 0.75rem; border-radius: 999px;
+  color: var(--h-muted); font-size: 0.8rem; text-decoration: none;
 }
 .home-coffee:hover { border-color: var(--h-accent); color: var(--h-accent); }
 .home-coffee:focus-visible { outline: 3px solid var(--h-accent); outline-offset: 2px; }
@@ -121,3 +121,4 @@ body:has(.home) { margin: 0; }
   .home-code { min-width: 3.9rem; font-size: 0.95rem; padding: 0.5rem 0.35rem; }
   .home-arrow { display: none; }
 }
+ 

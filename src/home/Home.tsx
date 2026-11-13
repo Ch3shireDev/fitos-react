@@ -159,9 +159,7 @@ export function Home() {
         <footer className="home-footer">
           Metodyka: GIOŚ, „Monitoring siedlisk przyrodniczych. Przewodnik metodyczny”. Formularz podpowiada oceny, ale
           ostateczną ocenę zawsze wybiera ekspert.
-          <a className="home-coffee" href={COFFEE_URL} target="_blank" rel="noopener noreferrer">
-            ☕ Buy me a coffee
-          </a>
+            <a href="https://www.buymeacoffee.com/LXmnx8A" className="home-coffee"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=LXmnx8A&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" /></a> 
         </footer>
       </main>
     </div>
