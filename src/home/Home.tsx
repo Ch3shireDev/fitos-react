@@ -18,7 +18,7 @@ const FEATURES = [
 /** Publiczny adres FITOS. Z zainstalowanej aplikacji czasem trzeba otworzyć zwykłą stronę (udostępnić link, pobrać plik w przeglądarce). */
 export const WEB_URL = 'https://ch3shiredev.github.io/fitos-react/'
 
-export const COFFEE_URL = 'https://buymeacoffee.com/LXmnx8A'
+export const COFFEE_URL = 'https://www.buymeacoffee.com/LXmnx8A';
 
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
@@ -159,7 +159,7 @@ export function Home() {
         <footer className="home-footer">
           Metodyka: GIOŚ, „Monitoring siedlisk przyrodniczych. Przewodnik metodyczny”. Formularz podpowiada oceny, ale
           ostateczną ocenę zawsze wybiera ekspert.
-            <a href="https://www.buymeacoffee.com/LXmnx8A" className="home-coffee"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=LXmnx8A&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" /></a> 
+            <a href={COFFEE_URL} className="home-coffee" id="home-coffee" data-testid="home-coffee"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=LXmnx8A&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" /></a> 
         </footer>
       </main>
     </div>

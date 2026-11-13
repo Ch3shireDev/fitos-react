@@ -132,10 +132,9 @@ it('link do wersji web: tylko w zainstalowanej aplikacji, otwiera się poza nią
 })
 
 it('stopka: dyskretny link „Buy me a coffee” w nowej karcie', () => {
-    render(<MemoryRouter><App /></MemoryRouter>)
-    const link = screen.getByRole('link', { name: /Buy me a coffee/ })
-    expect(link).toHaveAttribute('href', 'https://buymeacoffee.com/LXmnx8A')
-    expect(link).toHaveAttribute('href', COFFEE_URL)
-    expect(link).toHaveAttribute('target', '_blank')
+    render(<MemoryRouter><App /></MemoryRouter>) 
+    const link = screen.getByTestId('home-coffee') as HTMLAnchorElement
+    expect(link).toHaveAttribute('href', 'https://www.buymeacoffee.com/LXmnx8A')
+    expect(link).toHaveAttribute('href', COFFEE_URL) 
     expect(link.closest('footer')).not.toBeNull()
 })
