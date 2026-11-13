@@ -1,8 +1,10 @@
-import { it, expect } from 'vitest'
+import { it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import App from './App'
+import { CARDS } from './cards'
+import { COFFEE_URL, WEB_URL } from './home/Home'
 
 it('przechodzi ze strony głównej do karty 7120', async () => {
     render(<MemoryRouter><App /></MemoryRouter>)
@@ -18,7 +20,9 @@ it('strona główna: opis, karty z kodem i instrukcja instalacji', async () => {
     expect(screen.getByRole('link', { name: /7120 – Torfowiska wysokie zdegradowane/ })).toHaveAttribute('href', '/7120')
     expect(screen.getByText('*91D0')).toBeInTheDocument()
     const hrefs = screen.getAllByRole('link').map((a) => a.getAttribute('href')).filter((h) => /^\/\w{4}$/.test(h ?? ''))
-    expect(hrefs.sort()).toEqual(['/40A0', '/6410', '/6510', '/65XX', '/7120', '/91D0', '/91E0', '/91F0', '/91I0', '/91P0', '/91Q0'])
+    // kafelki = rejestr kart (nowa karta nie wymaga zmiany testu), a znane karty nie mogą zniknąć
+    expect(hrefs).toEqual(CARDS.map((c) => `/${c.code}`))
+    expect(hrefs).toEqual(expect.arrayContaining(['/40A0', '/6410', '/6510', '/65XX', '/7120', '/91D0', '/91E0', '/91F0', '/91I0', '/91P0', '/91Q0']))
     expect(screen.getByRole('heading', { name: 'Dodaj FITOS do ekranu głównego' })).toBeInTheDocument()
     expect(screen.getAllByRole('listitem').some((li) => /ekran|instalac|Zainstaluj/i.test(li.textContent ?? ''))).toBe(true)
 })
@@ -99,4 +103,39 @@ it('przechodzi ze strony głównej do karty 6510', async () => {
     expect(link).toHaveAttribute('href', '/6510')
     await userEvent.click(link)
     expect(screen.getByRole('heading', { name: 'Karta 6510' })).toBeInTheDocument()
+})
+
+it('każda zarejestrowana karta ma trasę i nagłówek „Karta <KOD>”', async () => {
+    for (const { code } of CARDS) {
+        const { unmount } = render(<MemoryRouter initialEntries={[`/${code}`]}><App /></MemoryRouter>)
+        expect(screen.getByRole('heading', { name: `Karta ${code}` })).toBeInTheDocument()
+        unmount()
+    }
+})
+
+it('link do wersji web: tylko w zainstalowanej aplikacji, otwiera się poza nią', () => {
+    const { unmount } = render(<MemoryRouter><App /></MemoryRouter>)
+    expect(screen.queryByRole('link', { name: /Wersja web/ })).not.toBeInTheDocument()
+    unmount()
+
+    vi.stubGlobal('matchMedia', (q: string) => ({ matches: q === '(display-mode: standalone)', media: q, addEventListener() {}, removeEventListener() {} }))
+    try {
+        render(<MemoryRouter><App /></MemoryRouter>)
+        const link = screen.getByRole('link', { name: /Wersja web/ })
+        expect(link).toHaveAttribute('href', 'https://ch3shiredev.github.io/fitos-react/')
+        expect(link).toHaveAttribute('href', WEB_URL)
+        expect(link).toHaveAttribute('target', '_blank')
+        expect(screen.getByText('kliknij, aby przejść na stronę web')).toBeInTheDocument()
+    } finally {
+        vi.unstubAllGlobals()
+    }
+})
+
+it('stopka: dyskretny link „Buy me a coffee” w nowej karcie', () => {
+    render(<MemoryRouter><App /></MemoryRouter>)
+    const link = screen.getByRole('link', { name: /Buy me a coffee/ })
+    expect(link).toHaveAttribute('href', 'https://buymeacoffee.com/LXmnx8A')
+    expect(link).toHaveAttribute('href', COFFEE_URL)
+    expect(link).toHaveAttribute('target', '_blank')
+    expect(link.closest('footer')).not.toBeNull()
 })

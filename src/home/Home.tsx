@@ -2,85 +2,11 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import { habitatCode } from '../7120/habitats/assessment'
-import type { Methodology } from '../7120/habitats/types'
-import { methodology7120 } from '../7120/habitats/7120/methodology'
-import { methodology91D0 } from '../91D0/habitats/methodology'
-import { methodology40A0 } from '../40A0/habitats/methodology'
-import { methodology6410 } from '../6410/habitats/methodology'
-import { methodology6510 } from '../6510/habitats/methodology'
-import { methodology65XX } from '../65XX/habitats/methodology'
-import { methodology91E0 } from '../91E0/habitats/methodology'
-import { methodology91F0 } from '../91F0/habitats/methodology'
-import { methodology91I0 } from '../91I0/habitats/methodology'
-import { methodology91P0 } from '../91P0/habitats/methodology'
-import { methodology91Q0 } from '../91Q0/habitats/methodology'
+import { CARDS } from '../cards'
 import { draftKey, loadDraft } from '../7120/components/habitat-form/draftStore'
 import { detectPlatform, useInstallPrompt, type Platform } from './installPrompt'
 import './home.css'
 
-interface HabitatEntry {
-  m: Methodology
-  title: string
-  blurb: string
-}
-
-const HABITATS: HabitatEntry[] = [
-  {
-    m: methodology40A0,
-    title: 'Subkontynentalne zarośla okołopannońskie',
-    blurb: 'Niskie zarośla wisienki stepowej w murawach kserotermicznych i naskalne zarośla irgi zwyczajnej w Sudetach.',
-  },
-  {
-    m: methodology6410,
-    title: 'Zmiennowilgotne łąki trzęślicowe',
-    blurb: 'Późno koszone łąki z trzęślicą, kosaćcem syberyjskim i olszewnikiem (zw. Molinion). Karta w układzie RDOŚ, z eksportem do Excela.',
-  },
-  {
-    m: methodology6510,
-    title: 'Ekstensywnie użytkowane niżowe łąki świeże',
-    blurb: 'Kośne łąki rajgrasowe i wiechlinowo-kostrzewowe (zw. Arrhenatherion). Karta w układzie RDOŚ, z eksportem do Excela.',
-  },
-  {
-    m: methodology65XX,
-    title: 'Eutroficzne łąki wilgotne',
-    blurb: 'Bujne, koszone łąki z ostrożeniami, kniecią i pępawą błotną (zw. Calthion) w dolinach i na wysiękach.',
-  },
-  {
-    m: methodology7120,
-    title: 'Torfowiska wysokie zdegradowane',
-    blurb: 'Torfowiska przekształcone przez odwodnienie i eksploatację, wciąż zdolne do regeneracji.',
-  },
-  {
-    m: methodology91D0,
-    title: 'Bory i lasy bagienne',
-    blurb: 'Sosnowe bory bagienne, brzeziny, świerczyny i borealne lasy sosnowo-brzozowe na torfie.',
-  },
-  {
-    m: methodology91E0,
-    title: 'Łęgi wierzbowe, topolowe, olszowe i jesionowe',
-    blurb: 'Lasy nadrzeczne i źródliskowe: łęgi wierzbowe, topolowe, jesionowo-olszowe i górskie olszynki.',
-  },
-  {
-    m: methodology91F0,
-    title: 'Łęgowe lasy dębowo-wiązowo-jesionowe',
-    blurb: 'Łęgi wiązowo-jesionowe w dolinach rzek i wilgotnych zagłębieniach, zagrożone przesuszeniem i grądowieniem.',
-  },
-  {
-    m: methodology91I0,
-    title: 'Ciepłolubne dąbrowy',
-    blurb: 'Świetliste dąbrowy o luźnym drzewostanie i bogatym, ciepłolubnym runie, zagrożone grądowieniem.',
-  },
-  {
-    m: methodology91P0,
-    title: 'Jodłowy bór świętokrzyski',
-    blurb: 'Wyżynne bory z dominacją jodły w Górach Świętokrzyskich, na Roztoczu i w Kotlinie Sandomierskiej.',
-  },
-  {
-    m: methodology91Q0,
-    title: 'Górskie reliktowe laski sosnowe',
-    blurb: 'Luźne laski karłowatych sosen na wapiennych i dolomitowych skałach Pienin i Tatr, z bogatym runem murawowym.',
-  },
-]
 
 const FEATURES = [
   'układ i pola jak w oficjalnej karcie obserwacji GIOŚ',
@@ -89,6 +15,11 @@ const FEATURES = [
   'działa offline, dane zostają tylko na tym urządzeniu',
 ]
 
+/** Publiczny adres FITOS. Z zainstalowanej aplikacji czasem trzeba otworzyć zwykłą stronę (udostępnić link, pobrać plik w przeglądarce). */
+export const WEB_URL = 'https://ch3shiredev.github.io/fitos-react/'
+
+export const COFFEE_URL = 'https://buymeacoffee.com/LXmnx8A'
+
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 
@@ -96,7 +27,7 @@ function useDrafts() {
   const [drafts, setDrafts] = useState<Record<string, string>>({})
   useEffect(() => {
     let alive = true
-    Promise.all(HABITATS.map(async ({ m }) => [m.code, (await loadDraft(draftKey(m.code)))?.savedAt] as const)).then(
+    Promise.all(CARDS.map(async ({ methodology: m }) => [m.code, (await loadDraft(draftKey(m.code)))?.savedAt] as const)).then(
       (rows) => {
         if (alive) setDrafts(Object.fromEntries(rows.filter((r): r is readonly [string, string] => Boolean(r[1]))))
       },
@@ -125,6 +56,10 @@ function InstallCard() {
       <section className="home-install home-install-done" aria-labelledby="home-install-title">
         <h2 id="home-install-title">✓ FITOS jest zainstalowany</h2>
         <p>Działa bez zasięgu. Nowa wersja pobiera się sama przy następnym uruchomieniu z internetem.</p>
+        <a className="home-web-link" href={WEB_URL} target="_blank" rel="noopener noreferrer">
+          Wersja web ↗
+        </a>
+        <span className="home-web-hint">kliknij, aby przejść na stronę web</span>
       </section>
     )
   }
@@ -192,7 +127,7 @@ export function Home() {
             Wybierz kartę siedliska
           </h2>
           <ul className="home-cards">
-            {HABITATS.map(({ m, title, blurb }) => (
+            {CARDS.map(({ methodology: m, title, blurb }) => (
               <li key={m.code}>
                 <Link to={`/${m.code}`} className="home-card">
                   <span className="home-code" aria-hidden="true">
@@ -224,6 +159,9 @@ export function Home() {
         <footer className="home-footer">
           Metodyka: GIOŚ, „Monitoring siedlisk przyrodniczych. Przewodnik metodyczny”. Formularz podpowiada oceny, ale
           ostateczną ocenę zawsze wybiera ekspert.
+          <a className="home-coffee" href={COFFEE_URL} target="_blank" rel="noopener noreferrer">
+            ☕ Buy me a coffee
+          </a>
         </footer>
       </main>
     </div>
