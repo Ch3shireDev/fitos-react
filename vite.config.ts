@@ -39,7 +39,7 @@ export default defineConfig({
         // bundle z biblioteką docx jest spory – domyślne 2 MB by go pominęło
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         navigateFallback: 'index.html',
-        navigateFallbackDenylist: [/\/karty\//],
+        navigateFallbackDenylist: [/\/karty\//, /\.xml$/, /\.txt$/, /\.md$/],
         cleanupOutdatedCaches: true,
       },
     }),
