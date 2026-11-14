@@ -110,8 +110,9 @@ export function Home() {
           <div>
             <h1>FITOS</h1>
             <p className="home-lead">
-              Karty obserwacji siedlisk przyrodniczych do Państwowego Monitoringu Środowiska, wypełniane w terenie – na
-              telefonie, tablecie albo komputerze.
+              Elektroniczne karty obserwacji siedlisk przyrodniczych Natura 2000, zgodne z metodyką Państwowego Monitoringu Środowiska (GIOŚ). Do wypełniania w terenie na telefonie, tablecie lub komputerze, także bez dostępu do internetu.
+
+Wszystkie dane są przechowywane wyłącznie na Twoim urządzeniu i nigdy nie są przesyłane na żaden serwer.
             </p>
           </div>
         </header>
