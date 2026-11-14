@@ -147,8 +147,8 @@ export function assessCard(m: Methodology, values: CardValues): Assessment {
   const structureIndicators = m.indicators.filter((i) => i.parameter === 'structure' && !isExcluded(i, values.site))
 
   const area = aggregateOverall(areaIndicators.map((i) => gradeOf(i.id)))
-  const structure = aggregateStructure(
-    structureIndicators.map((i) => ({ grade: gradeOf(i.id), cardinal: isCardinal(i, values.site) })),
+  const structure = (m.structureRule ?? aggregateStructure)(
+    structureIndicators.map((i) => ({ id: i.id, grade: gradeOf(i.id), cardinal: isCardinal(i, values.site) })),
   )
   const prospects = values.prospects?.grade ?? ''
   const overall = aggregateOverall([area, structure, prospects])

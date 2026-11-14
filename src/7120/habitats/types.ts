@@ -208,10 +208,22 @@ export interface Methodology {
   otherFields: FieldDef[]
   /** Dodatkowe zakładki; ich pola lądują w `values.other`, razem z `otherFields`. */
   extraSteps?: ExtraStep[]
+  /**
+   * Własna reguła oceny „specyficznej struktury i funkcji”, gdy tab. przewodnika liczy inaczej niż reguła ogólna
+   * (np. 3260: U2 dopiero przy więcej niż dwóch kardynalnych U2). Brak = `aggregateStructure` z assessment.ts.
+   */
+  structureRule?: (items: StructureItem[]) => GradeOrEmpty
   /** Katalog gatunków do wyszukiwarki (nazwa naukowa + polska). */
   speciesCatalog?: CatalogOption[]
   /** Krótka etykieta gatunku, np. „torfowiec kępkowy”; undefined = nieznany. */
   speciesInfo?: (name: string) => string | undefined
+}
+
+/** Wskaźnik w ocenie struktury: id, ocena i to, czy jest kardynalny przy tym stanowisku. */
+export interface StructureItem {
+  id: string
+  grade: GradeOrEmpty
+  cardinal: boolean
 }
 
 /** Wszystkie pola zapisywane w `values.other`: „Inne informacje” i dodatkowe zakładki. */
