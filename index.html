@@ -2,20 +2,114 @@
 <html lang="pl">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- SEO: tytuł ~60 znaków, opis ~155. Google i tak czasem przepisuje, ale zaczyna od tego. -->
+    <title>FITOS – karty obserwacji siedlisk Natura 2000 (monitoring GIOŚ)</title>
+    <meta
+      name="description"
+      content="Darmowa aplikacja z formularzami kart obserwacji siedlisk przyrodniczych Natura 2000 do monitoringu wg metodyki GIOŚ: torfowiska, łęgi, wydmy, jeziora, łąki. Działa offline na telefonie."
+    />
+    <link rel="canonical" href="https://ch3shiredev.github.io/fitos-react/" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <!-- Search Console: wklej tu swój znacznik weryfikacyjny i odkomentuj (patrz JAK-WGRAC.md)
+    <meta name="google-site-verification" content="WKLEJ_KOD_Z_SEARCH_CONSOLE" />
+    -->
+
     <!-- tylko PNG: Firefox na Androidzie nie umie zrobić skrótu z ikony SVG i daje domyślnego droida -->
     <link rel="icon" type="image/png" sizes="192x192" href="/pwa-192.png" />
     <link rel="icon" type="image/png" sizes="512x512" href="/pwa-512.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#2e6b3f" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="FITOS" />
+    <meta name="application-name" content="FITOS" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <title>FITOS</title>
+    <meta name="google-site-verification" content="gn7r7MyKuYqV7MBlrsA7EkMi_WuNeD36FR7GoJy-UPU" />
+    <!-- Open Graph / Facebook / Messenger / LinkedIn / Slack: podgląd linku -->
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="pl_PL" />
+    <meta property="og:site_name" content="FITOS" />
+    <meta property="og:title" content="FITOS – karty obserwacji siedlisk Natura 2000" />
+    <meta
+      property="og:description"
+      content="Formularze kart obserwacji siedlisk przyrodniczych do monitoringu wg metodyki GIOŚ. W terenie, na telefonie, także bez zasięgu."
+    />
+    <meta property="og:url" content="https://ch3shiredev.github.io/fitos-react/" />
+    <meta property="og:image" content="https://ch3shiredev.github.io/fitos-react/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="FITOS – karty obserwacji siedlisk przyrodniczych Natura 2000" />
+
+    <!-- X / Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="FITOS – karty obserwacji siedlisk Natura 2000" />
+    <meta
+      name="twitter:description"
+      content="Formularze kart obserwacji siedlisk przyrodniczych do monitoringu wg metodyki GIOŚ. Działa offline."
+    />
+    <meta name="twitter:image" content="https://ch3shiredev.github.io/fitos-react/og-image.png" />
+
+    <!-- Dane strukturalne. Bez ocen i recenzji: nie ma prawdziwych, a zmyślone Google karze ręcznie. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://ch3shiredev.github.io/fitos-react/#website",
+            "url": "https://ch3shiredev.github.io/fitos-react/",
+            "name": "FITOS",
+            "alternateName": "FITOS – karty obserwacji siedlisk przyrodniczych",
+            "inLanguage": "pl-PL"
+          },
+          {
+            "@type": "WebApplication",
+            "@id": "https://ch3shiredev.github.io/fitos-react/#app",
+            "name": "FITOS",
+            "alternateName": "FITOS – karty obserwacji siedlisk przyrodniczych",
+            "url": "https://ch3shiredev.github.io/fitos-react/",
+            "description": "Formularze kart obserwacji siedlisk przyrodniczych Natura 2000 do monitoringu wg metodyki GIOŚ (Państwowy Monitoring Środowiska). Wypełnianie w terenie, praca offline, zapis karty do pliku.",
+            "inLanguage": "pl-PL",
+            "applicationCategory": "UtilitiesApplication",
+            "applicationSubCategory": "Monitoring przyrodniczy",
+            "operatingSystem": "Dowolny (przeglądarka, Android, iOS, Windows, macOS, Linux)",
+            "browserRequirements": "Wymaga JavaScriptu. Instalowalna jako PWA.",
+            "isAccessibleForFree": true,
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "PLN" },
+            "image": "https://ch3shiredev.github.io/fitos-react/og-image.png",
+            "featureList": [
+              "Karty obserwacji siedlisk przyrodniczych Natura 2000",
+              "Ocena stanu ochrony: parametry i wskaźniki",
+              "Praca offline w terenie",
+              "Zapis i wczytywanie karty z pliku",
+              "Instalacja na telefonie jako aplikacja (PWA)"
+            ],
+            "keywords": "monitoring siedlisk przyrodniczych, Natura 2000, karta obserwacji siedliska, GIOŚ, PMŚ, ocena stanu ochrony"
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
+    <!-- Dla robotów i przeglądarek bez JS. Listę kart wstawia vite-plugin-seo.ts przy budowaniu. -->
+    <noscript>
+      <main style="max-width: 46rem; margin: 0 auto; padding: 1.5rem 1rem; font-family: system-ui, sans-serif; line-height: 1.6">
+        <h1>FITOS – karty obserwacji siedlisk przyrodniczych Natura 2000</h1>
+        <p>
+          FITOS to darmowa aplikacja internetowa z formularzami kart obserwacji siedlisk przyrodniczych do
+          monitoringu Natura 2000, zgodnymi z metodyką monitoringu GIOŚ (Państwowy Monitoring Środowiska).
+          Kartę wypełnisz w terenie na telefonie, także bez zasięgu, i zapiszesz w pliku. Aplikacja wymaga
+          włączonego JavaScriptu.
+        </p>
+        <h2>Karty siedlisk</h2>
+        <ul>
+          <!--seo:karty-->
+        </ul>
+      </main>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
