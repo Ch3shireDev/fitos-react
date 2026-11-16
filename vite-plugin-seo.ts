@@ -181,6 +181,7 @@ export default function seoPages(): Plugin {
         this.emitFile({ type: 'asset', fileName: `karty/${card.code}/index.html`, source: cardPage(card, cards) })
       }
       this.emitFile({ type: 'asset', fileName: 'site-map.xml', source: sitemap(cards) })
+      this.emitFile({ type: 'asset', fileName: 'sitemap.xml', source: sitemap(cards) })
       this.emitFile({ type: 'asset', fileName: 'robots.txt', source: robots() })
     },
   }
